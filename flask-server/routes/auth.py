@@ -20,15 +20,42 @@ def init_db():
 
 init_db()
 
+# testuser1@mmu.com
+# testUser
+# 123123
+
+
 @auth_bp.route("/login", methods=['POST'])
 def login():
 
     data=request.get_json()
-    email=data.get("email")
+    username=data.get("username")
     password=data.get("password")
 
-    print(f"Received: {email}, {password}")
-    return '', 204  # no content
+    conn=sqlite3.connect("users.db")
+    cursor=conn.cursor()
+
+    cursor.execute(
+        "SELECT * FROM users WHERE username = ? AND password = ?", (username, password)
+    )
+
+    user=cursor.fetchone()
+    conn.close()
+
+    if user:
+        return jsonify(
+            {
+                "message": "Login successful!",
+                "username": username,
+                "email": user[2]
+            }
+        ), 200
+    else:
+        return jsonify(
+            {
+                "error": "Invalid credentials"
+            }
+        ), 401
 
 @auth_bp.route("/register", methods=['POST'])
 def register():

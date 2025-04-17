@@ -16,23 +16,23 @@ const Login = () => {
         event.preventDefault()
 
         try{
-            fetch("http://127.0.0.1:5000/auth/login", {
+            const response= await fetch("http://127.0.0.1:5000/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    email: username,
+                    username: username,
                     password: password
                 })
             })
 
-            // const data=await response.json()
-            // if(response.ok){
-            //     alert(`Login success: ${data.email}`)
-            // } else {
-            //     alert(`Login failed: ${data.error}`)
-            // }
+            const data=await response.json()
+            if(response.ok){
+                alert(`Login success: ${data.username}`)
+            } else {
+                alert(`Login failed: ${data.error}`)
+            }
         }catch(err){
             alert("Something went wrong")
             console.error(err)
