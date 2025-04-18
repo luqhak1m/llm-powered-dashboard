@@ -1,6 +1,6 @@
 import React from 'react'
 import { useState } from "react"
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 
 const Login = () => {
@@ -11,12 +11,14 @@ const Login = () => {
     const handleChange=(setValue)=>(event)=>{
       {setValue(event.target.value)}
     }
-  
+
+    const navigate = useNavigate()
+
     const handleSubmit=async (event)=>{
         event.preventDefault()
 
         try{
-            const response= await fetch("http://127.0.0.1:5000/auth/login", {
+            const response= await fetch("http://127.0.0.1:5001/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -26,10 +28,10 @@ const Login = () => {
                     password: password
                 })
             })
-
             const data=await response.json()
             if(response.ok){
-                alert(`Login success: ${data.username}`)
+                localStorage.setItem("token", data.token)
+                navigate("/mainmenu")
             } else {
                 alert(`Login failed: ${data.error}`)
             }
@@ -38,6 +40,7 @@ const Login = () => {
             console.error(err)
         }
     }
+
   
     return (
       <div className="container">

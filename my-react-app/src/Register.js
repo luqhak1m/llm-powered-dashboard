@@ -1,5 +1,6 @@
 import React from 'react'
 import { useState } from "react"
+import { Link, useNavigate } from 'react-router-dom'
 
 const Register = () => {
 
@@ -10,12 +11,15 @@ const Register = () => {
     const handleChange=(setValue)=>(event)=>{
       {setValue(event.target.value)}
     }
-  
+
+    const navigate = useNavigate()
+
     const handleSubmit=async (event)=>{
+        console.log("handling submission")
         event.preventDefault()
 
         try{
-            fetch("http://127.0.0.1:5000/auth/register", {
+            const response=await fetch("http://127.0.0.1:5001/auth/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -26,7 +30,13 @@ const Register = () => {
                     password: password
                 })
             })
-
+            const data=await response.json()
+            if(response.ok){
+                localStorage.setItem("token", data.token)
+                navigate("/mainmenu")
+            } else {
+                alert(`Registration failed: ${data.error}`)
+            }
         }catch(err){
             alert("Something went wrong")
             console.error(err)
@@ -81,7 +91,7 @@ const Register = () => {
                 type="submit" 
                 value="Register" />
             </div>
-            <div className="signup-link">Already has an account? <a href="/login">Login</a></div>
+            <div className="signup-link">Already has an account? <Link to="/login">Login</Link></div>
           </form>
         </div>
       </div>

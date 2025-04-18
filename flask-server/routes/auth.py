@@ -2,7 +2,18 @@
 from flask import Blueprint, request, jsonify
 import sqlite3
 
+import os
+from dotenv import load_dotenv
+
+import jwt
+import datetime
+
 auth_bp=Blueprint('auth', __name__)
+
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+print(SECRET_KEY)
 
 def init_db():
     conn=sqlite3.connect("users.db")
@@ -18,11 +29,45 @@ def init_db():
     conn.commit()
     conn.close()
 
+    print("db_init() successfully executed")
+
 init_db()
 
 # testuser1@mmu.com
 # testUser
 # 123123
+
+@auth_bp.route("/currentUser", methods=["GET"])
+def currentUser():
+    auth_header=request.headers.get("Authorization")
+    if not auth_header:
+        return jsonify(
+            {
+                "error": "Missing Token"
+            }
+        ), 401
+    
+    token=auth_header.replace("Bearer ", "")
+    try:
+        decoded=jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return jsonify(
+            {
+                "username": decoded["username"],
+                "email": decoded["email"]
+            }
+        ), 200
+    except jwt.ExpiredSignatureError:
+        return jsonify(
+            {
+                "error": "Token Expired"
+            }
+        ), 401
+    except jwt.InvalidTokenError:
+        return jsonify(
+            {
+                "error": "Invalid Token"
+            }
+        ), 401
 
 
 @auth_bp.route("/login", methods=['POST'])
@@ -43,19 +88,24 @@ def login():
     conn.close()
 
     if user:
-        return jsonify(
-            {
-                "message": "Login successful!",
-                "username": username,
-                "email": user[2]
+        payload={
+            "id": user[0],
+            "username": user[1],
+            "email": user[2],
+            "exp": int((datetime.datetime.now() + datetime.timedelta(hours=1)).timestamp())
+        }
+        token=jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
+        return jsonify({
+            "message": "Login Successful",
+            "token": token
+        }), 200
+    
+    return jsonify(
+        {
+            "error": "Invalid credentials"
             }
-        ), 200
-    else:
-        return jsonify(
-            {
-                "error": "Invalid credentials"
-            }
-        ), 401
+    ), 401
 
 @auth_bp.route("/register", methods=['POST'])
 def register():
@@ -74,6 +124,7 @@ def register():
             (username, email, password)
         )
         conn.commit()
+
     except sqlite3.IntegrityError:
         return jsonify(
             {
@@ -83,4 +134,15 @@ def register():
     finally:
         conn.close()
 
-    return jsonify({'message': 'User registered successfully'}), 201
+    payload={
+            "id": cursor.lastrowid,
+            "username": username,
+            "email": email,
+            "exp": int((datetime.datetime.now() + datetime.timedelta(hours=1)).timestamp())
+        }
+    token=jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
+    return jsonify({
+        "message": "Registration Successful",
+        "token": token
+    }), 200
