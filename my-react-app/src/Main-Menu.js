@@ -10,6 +10,12 @@ const MainMenu = () => {
 
     const user=useUser()
     const navigate = useNavigate()
+
+    const handleLogout=()=>{
+        localStorage.removeItem("token")
+        alert("You have been logged out from your account.")
+        navigate('/login')
+    }
     
     return (
         <div className='container'>
@@ -25,7 +31,7 @@ const MainMenu = () => {
 
                     <div className='horizontal-btn'>
                         <button onClick={() => navigate("/profile")}> <img className='btn-icon' src='images/profile-btn.png' /> Profile </button>
-                        <button id='logout-btn'> <img className='btn-icon' src='images/logout-btn.webp' /> Log Out </button>
+                        <button id='logout-btn' onClick={handleLogout}> <img className='btn-icon' src='images/logout-btn.webp' /> Log Out </button>
                     </div>
                     <button> <img className='btn-icon' src='images/graph-btn.webp' /> Generate Visual and Analysis </button>
                     <button> <img className='btn-icon' src='images/database-btn.webp' /> Data Source </button>
