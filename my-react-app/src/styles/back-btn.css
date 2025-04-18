@@ -1,0 +1,36 @@
+  .title-ul{
+    text-align: center;
+  }
+
+  .back-div{
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding-top: 20px;
+  }
+
+  .back-parent{
+    margin-bottom: 10px;
+    position: relative;
+    align-items: center;
+  }
+
+  h1{
+    text-align: center;
+    padding: 20px 0 0 0;
+    font-size: 20px;
+  }
+
+  .back-btn {
+    background: none;
+    color: #959595;
+    border: none;
+    font-size: 30px;
+    cursor: pointer;
+    padding: 0 0 0 20px;
+  }
+  
+  .back-btn:hover {
+    text-decoration: underline;
+  }

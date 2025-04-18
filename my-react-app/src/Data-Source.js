@@ -1,11 +1,16 @@
+
 import React from 'react'
 import { useState } from "react"
 import { Link, useNavigate } from 'react-router-dom'
+import "./styles/back-btn.css"
+import "./styles/font.css"
 
 
-const Login = () => {
+const DataSource = () => {
 
     const [username, setUsername]=useState("")
+    const [host, setHost]=useState("")
+    const [database, setDatabase]=useState("")
     const [password, setPassword]=useState("")
   
     const handleChange=(setValue)=>(event)=>{
@@ -18,20 +23,21 @@ const Login = () => {
         event.preventDefault()
 
         try{
-            const response= await fetch("http://127.0.0.1:5001/auth/login", {
+            const response= await fetch("http://127.0.0.1:5001/data-source/db-connection", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     username: username,
+                    host: host,
+                    database: database,
                     password: password
                 })
             })
             const data=await response.json()
             if(response.ok){
-                localStorage.setItem("token", data.token)
-                navigate("/mainmenu")
+                alert(`${data.message}!`)
             } else {
                 alert(`Login failed: ${data.error}`)
             }
@@ -46,11 +52,16 @@ const Login = () => {
       <div className="container">
         <div className="wrapper">
   
-          <div className="title">
-            <span>Welcome!</span>
-          </div>
-          <p className='title_para'>Please enter your details to sign in.</p>
-  
+          <div className="back-parent">
+            <div className='back-div'>
+                <button className="back-btn" onClick={() => navigate("/mainmenu")}>
+                    ⬅
+                </button>
+            </div>
+            <div className='title-ul'>
+                <h1>Connect to your Database</h1>
+            </div>
+          </div>  
           <form 
             method="POST"
             action="#"
@@ -60,12 +71,32 @@ const Login = () => {
               {/* <i className="fas fa-user"></i> */}
               <input 
                 type="text" 
-                placeholder="Enter your Username" 
+                placeholder="Username" 
                 value={username}
                 onChange={handleChange(setUsername)}
                 required />
             </div>
   
+            <div className="row">
+              {/* <i className="fas fa-lock"></i> */}
+              <input 
+                type="text" 
+                placeholder="Host"
+                value={host}
+                onChange={handleChange(setHost)}
+                required />
+            </div>
+
+            <div className="row">
+              {/* <i className="fas fa-lock"></i> */}
+              <input 
+                type="text" 
+                placeholder="Database"
+                value={database}
+                onChange={handleChange(setDatabase)}
+                required />
+            </div>
+
             <div className="row">
               {/* <i className="fas fa-lock"></i> */}
               <input 
@@ -75,13 +106,12 @@ const Login = () => {
                 onChange={handleChange(setPassword)}
                 required />
             </div>
-            <div className="pass"><a href="#">Forgot password?</a></div>
+
             <div className="row button">
               <input 
                 type="submit" 
-                value="Login" />
+                value="Verify Connection" />
             </div>
-            <div className="signup-link"> Not a member? <Link to="/register">Sign Up</Link></div>
 
           </form>
         </div>
@@ -89,4 +119,4 @@ const Login = () => {
     )
   }
 
-export default Login;
+export default DataSource;

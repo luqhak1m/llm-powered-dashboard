@@ -3,6 +3,7 @@ import Login from "./Login"
 import Register from "./Register"
 import MainMenu from './Main-Menu'
 import Profile from './Profile'
+import DataSource from './Data-Source'
 
 function Layout() {
     return (
@@ -12,6 +13,7 @@ function Layout() {
           <Route path="/register" element={<Register />} />
           <Route path="/mainmenu" element={<MainMenu />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/db-connection" element={<DataSource />} />
         </Routes>
       </Router>
     )

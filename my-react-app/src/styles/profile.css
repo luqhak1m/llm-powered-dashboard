@@ -21,37 +21,7 @@
     margin: auto;
     border: 1px solid #ccc;} /* ← subtle gray line */
 
-  h1{
-    text-align: center;
-    padding: 20px 0 0 0;
-  }
 
-  .profile{
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-  }
-
-  .back-btn {
-    background: none;
-    color: #959595;
-    border: none;
-    font-size: 30px;
-    cursor: pointer;
-    padding: 0 0 0 20px;
-  }
-  
-  .back-btn:hover {
-    text-decoration: underline;
-  }
-
-  .profile-ul{
-    padding-left: 95px;
-  }
-
-  .back-div{
-    padding-left: 10x;
-  }
 
   
   

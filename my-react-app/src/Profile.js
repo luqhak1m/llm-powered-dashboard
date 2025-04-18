@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from 'react-router-dom'
 import "./styles/font.css"
 import './styles/profile.css'
+import './styles/back-btn.css'
 
 export const useUser=()=>{
     const [user, setUser]=useState("")
@@ -33,13 +34,13 @@ const Profile = () => {
       <div className="container">
         <div className="wrapper">
 
-            <div className='profile'>
+            <div className='back-parent'>
                 <div className='back-div'>
                     <button className="back-btn" onClick={() => navigate("/mainmenu")}>
                         ⬅
                     </button>
                 </div>
-                <div className='profile-ul'>
+                <div className='title-ul'>
                     <h1>Profile</h1>
                 </div>
             </div>
