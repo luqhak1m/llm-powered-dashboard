@@ -6,7 +6,7 @@ import "./styles/back-btn.css"
 import "./styles/font.css"
 
 
-const DataSource = () => {
+const LocalDB = () => {
 
     const [username, setUsername]=useState("")
     const [host, setHost]=useState("")
@@ -54,7 +54,7 @@ const DataSource = () => {
   
           <div className="back-parent">
             <div className='back-div'>
-                <button className="back-btn" onClick={() => navigate("/mainmenu")}>
+                <button className="back-btn" onClick={() => navigate("/db-choices")}>
                     ⬅
                 </button>
             </div>
@@ -62,6 +62,7 @@ const DataSource = () => {
                 <h1>Connect to your Database</h1>
             </div>
           </div>  
+
           <form 
             method="POST"
             action="#"
@@ -119,4 +120,4 @@ const DataSource = () => {
     )
   }
 
-export default DataSource;
+export default LocalDB;
