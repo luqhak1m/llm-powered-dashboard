@@ -29,7 +29,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-    print("db_init() successfully executed")
+    # print("db_init() successfully executed")
 
 init_db()
 

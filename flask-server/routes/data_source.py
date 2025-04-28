@@ -3,6 +3,8 @@ from flask import Blueprint, request, jsonify
 from sqlalchemy import create_engine, text, inspect, func, select
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from urllib.parse import quote_plus
+from module.state import State, state
+from langchain_community.utilities import SQLDatabase
 
 connection_status={
     "status":False,
@@ -23,6 +25,10 @@ def ValidateConnection():
     password=quote_plus(data.get("password"))
 
     db_uri = f"mysql+mysqlconnector://{username}:{password}@{host}/{database}"
+    db=SQLDatabase.from_uri(db_uri)
+    state.setDBToState(db)
+    state.setSchemaToState()
+
     try:
         engine = create_engine(db_uri)
         with engine.connect() as conn:
@@ -124,3 +130,7 @@ def PreviewTable(table_name):
                 "error": "No Connection"
             }
         ), 400
+    
+
+
+
