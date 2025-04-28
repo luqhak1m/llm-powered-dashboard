@@ -19,7 +19,7 @@ const DatabaseChoices=()=>{
 
                 <div className="back-parent">
                     <div className='back-div'>
-                        <button className="back-btn" onClick={() => navigate("/mainmenu")}>
+                        <button className="back-btn" onClick={() => navigate("/db-preview")}>
                             ⬅
                         </button>
                     </div>

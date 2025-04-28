@@ -17,17 +17,23 @@ body {
 }
 
 .container {
-  max-width: 440px;
+  width: 100%;
+  min-height: 100vh;
   padding: 0 20px;
-  margin: 170px auto;
+  display: flex;
+	justify-content: center; /* center horizontally */
+	align-items: center;     /* center vertically */
 }
 
 .wrapper {
-  width: 100%;
+  width: 1000px;
+  height: 1000px;
+  overflow-y: auto;
   background: #fff;
   border-radius: 5px;
   /* box-shadow: 0px 4px 10px 1px rgba(0, 0, 0, 0.1); */
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+  padding-bottom: 10px;
 }
 
 .wrapper .title {

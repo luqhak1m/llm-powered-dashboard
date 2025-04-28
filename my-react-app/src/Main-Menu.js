@@ -29,14 +29,12 @@ const MainMenu = () => {
 
                 <div id="options">
 
-                    <div className='horizontal-btn'>
-                        <button onClick={() => navigate("/profile")}> <img className='btn-icon' src='images/profile-btn.png' /> Profile </button>
-                        <button id='logout-btn' onClick={handleLogout}> <img className='btn-icon' src='images/logout-btn.webp' /> Log Out </button>
-                    </div>
+                    <button onClick={() => navigate("/profile")}> <img className='btn-icon' src='images/profile-btn.png' /> Profile </button>
                     <button> <img className='btn-icon' src='images/graph-btn.webp' /> Generate Visual and Analysis </button>
-                    <button onClick={()=>navigate("/db-choices")}> <img className='btn-icon' src='images/database-btn.webp' /> Data Source </button>
+                    <button onClick={()=>navigate("/db-preview")}> <img className='btn-icon' src='images/database-btn.webp' /> Data Source </button>
                     <button> <img className='btn-icon' src='images/folder-btn.png' /> Saved Visual and Analysis </button>
                     <button> <img className='btn-icon' src='images/settings-btn.png' /> Settings </button>
+                    <button id='logout-btn' onClick={handleLogout}> <img className='btn-icon' src='images/logout-btn.webp' /> Log Out </button>
 
                 </div>
             </div>
