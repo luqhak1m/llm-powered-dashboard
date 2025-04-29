@@ -320,7 +320,6 @@ class State:
 
         try:
 
-            # #query_prompt_template = hub.pull("langchain-ai/sql-query-system-prompt")
             loc="langchain-ai/sql-query-system-prompt"
             query_prompt_template = hub.pull(loc)
 
@@ -328,18 +327,10 @@ class State:
             # for message in query_prompt_template.messages:
             #     message.pretty_print()
 
-            self.prompt=query_prompt_template.messages
+            self.prompt=query_prompt_template
 
             log_message("Prompt template retrieval successful")
             print(f"\nstate.prompt set! {self.prompt}")
-
-            # query_prompt_template.messages[0].pretty_print()
-
-            # langsmith_key=os.getenv('LANGSMITH_API_KEY')
-            # print(langsmith_key)
-            # client = Client(api_key=langsmith_key)
-            # prompt = client.pull_prompt("langchain-ai/sql-query-system-prompt", include_model=True)
-            # prompt[0].pretty_print()
 
         except Exception as e:
             log_message(f"Error: {e} retrieving prompt template from {loc}")
@@ -353,6 +344,129 @@ class State:
 
         except Exception as e:
             log_message(f"Error defining tools: {e}")
+
+    def writeQuery(self):
+        """Generate SQL query to fetch information."""
+
+        try:
+            print(f"generating query from input {self.question}")
+
+            print(f"generating prompt")
+            prompt = self.prompt.invoke(
+                {
+                    "dialect": "mysql",
+                    "top_k": 10,
+                    "table_info": self.schema,
+                    "input": self.question,
+                }
+            )
+            print(prompt)
+
+            print(f"generating structured LLM")
+            structured_llm = self.llm.with_structured_output(QueryOutput)
+            print(structured_llm)
+
+            print(f"generating result")
+            result = structured_llm.invoke(prompt)
+            print(result)
+
+
+            self.query=result["query"]
+            print(result["query"])
+            return self.query
+        except Exception as e:
+            return f"Error writing query: {e}"
+        
+    def executeQuery(self):
+        """Execute SQL query."""
+        execute_query_tool=QuerySQLDatabaseTool(db=self.db)
+        self.result=execute_query_tool.invoke(self.query)
+        # print(f"{type(data)}")
+        return self.result
+    
+    def generateDF(self):
+        """Generate dictionary based on the data provided and user prompt."""
+        prompt = f"""
+            Given the following user question and data, generate a dictionary containing the name of the column and the corresponding data.
+            Your response will be converted directly into a dataframe, hence your response should only be in form of dictionary only.
+
+            f'Question: {self.question}\n'
+            f'SQL Result: {self.result}'
+            
+            """
+        
+        response = self.llm.invoke(prompt)
+        data={"df": response.content}
+        dict_data = ast.literal_eval(data['df'])  # Convert to dictionary
+        # print(f"{type(dict_data)}")
+        self.data=dict_data
+
+        return self.data
+    
+    def chooseVisualization(self):
+
+            prompt=f"""
+            
+            You are given several tools that correspond to different types of data visualization graphs and charts.
+            Given the following user questions, the result from the database, the data, and the tools, choose the best tool to represent the data.
+
+            Question: {self.question}
+            Result: {self.result}
+            Data: {self.data}
+            Tools: {self.tools}
+
+            """
+
+            llm_with_tools=self.llm.bind_tools(self.tools)
+            # chain = llm_with_tools | human_approval
+            
+            try:
+
+                # Step 1: Invoke LLM to get the function call
+                response = llm_with_tools.invoke(prompt)
+
+                # Step 2: Extract tool calls from AIMessage
+                tool_calls = response.additional_kwargs.get("tool_calls", [])
+                if not tool_calls:
+                    raise ValueError("No tool call returned by the LLM.")
+
+                function_call = tool_calls[0]  # Assuming a single function call
+                function_name = function_call["function"]["name"]
+                function_args = json.loads(function_call["function"]["arguments"])  # Convert string to dict
+
+                # Step 3: Execute tool dynamically using LangChain's `.invoke()`
+                tool_mapping = {tool.name: tool for tool in self.tools}  # Map tool names
+
+                if function_name in tool_mapping:
+                    print(function_name)
+                    print(function_args)
+                    visualization_result = tool_mapping[function_name].invoke(input=function_args)
+                    self.visualization = visualization_result
+
+                    # Get the parent directory (folder containing `State.py`'s folder)
+                    parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../my-react-app/public"))
+
+                    # Ensure the folder exists (optional)
+                    visualization_folder = os.path.join(parent_folder, "generated-visual")
+                    os.makedirs(visualization_folder, exist_ok=True)
+
+                    # Save HTML file inside the parent folder (or "visualizations" inside it)
+                    html_file = os.path.join(visualization_folder, "visual.html")
+
+                    # Save the visualization
+                    fig = self.visualization
+                    fig.write_html(html_file)
+
+                    html_file = os.path.join(visualization_folder, "visual.html")
+                    fig = self.visualization
+                    fig.write_html(html_file)
+
+                    return self.visualization
+                else:
+                    raise ValueError(f"Unknown function: {function_name}")
+
+            except Exception as e:
+                print(e)
     
 class QueryOutput(TypedDict):
     """Generated SQL query."""

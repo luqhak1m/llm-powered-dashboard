@@ -21,13 +21,16 @@ body {
   min-height: 100vh;
   padding: 0 20px;
   display: flex;
-	justify-content: center; /* center horizontally */
-	align-items: center;     /* center vertically */
+	justify-content: center;
+	align-items: center;
+  transition: all 0.3s ease; 
+
 }
 
 .wrapper {
   width: 1000px;
   height: 1000px;
+  min-height: 10px;
   overflow-y: auto;
   background: #fff;
   border-radius: 5px;

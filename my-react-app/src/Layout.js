@@ -6,6 +6,7 @@ import Profile from './Profile'
 import LocalDB from './Data-Source'
 import DatabaseChoices from './Database-Choices'
 import DataPreview from './Data-Preview'
+import Query from './Query'
 
 function Layout() {
     return (
@@ -18,6 +19,7 @@ function Layout() {
           <Route path="/local-db" element={<LocalDB />} />
           <Route path="/db-choices" element={<DatabaseChoices />} />
           <Route path="/db-preview" element={<DataPreview />} />
+          <Route path="/query" element={<Query />} />
         </Routes>
       </Router>
     )

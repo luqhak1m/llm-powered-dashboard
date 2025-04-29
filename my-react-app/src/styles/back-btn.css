@@ -14,6 +14,8 @@
     margin-bottom: 10px;
     position: relative;
     align-items: center;
+    display: flex;
+    justify-content: center;
   }
 
   h1{
@@ -34,3 +36,4 @@
   .back-btn:hover {
     text-decoration: underline;
   }
+  

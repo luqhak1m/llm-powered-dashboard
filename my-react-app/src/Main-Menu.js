@@ -30,7 +30,7 @@ const MainMenu = () => {
                 <div id="options">
 
                     <button onClick={() => navigate("/profile")}> <img className='btn-icon' src='images/profile-btn.png' /> Profile </button>
-                    <button> <img className='btn-icon' src='images/graph-btn.webp' /> Generate Visual and Analysis </button>
+                    <button onClick={()=>navigate("/query")}> <img className='btn-icon' src='images/graph-btn.webp' /> Generate Visual and Analysis </button>
                     <button onClick={()=>navigate("/db-preview")}> <img className='btn-icon' src='images/database-btn.webp' /> Data Source </button>
                     <button> <img className='btn-icon' src='images/folder-btn.png' /> Saved Visual and Analysis </button>
                     <button> <img className='btn-icon' src='images/settings-btn.png' /> Settings </button>

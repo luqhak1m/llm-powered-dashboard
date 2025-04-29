@@ -26,7 +26,11 @@ def ValidateConnection():
 
     db_uri = f"mysql+mysqlconnector://{username}:{password}@{host}/{database}"
     db=SQLDatabase.from_uri(db_uri)
+
+    print(f"setting db to state...")
     state.setDBToState(db)
+
+    print(f"setting schema to state...")
     state.setSchemaToState()
 
     try:
