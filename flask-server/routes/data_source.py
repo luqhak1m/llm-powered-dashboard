@@ -4,6 +4,7 @@ from sqlalchemy import create_engine, text, inspect, func, select
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from urllib.parse import quote_plus
 from module.state import State, state
+from module.systemFunction import log_message
 from langchain_community.utilities import SQLDatabase
 
 connection_status={
@@ -17,22 +18,41 @@ data_source_bp=Blueprint('data-source', __name__)
 @data_source_bp.route("/db-connection", methods=["POST"])
 def ValidateConnection():
 
-    data=request.get_json()
+    try:
+        data=request.get_json()
 
-    username=data.get("username")
-    host=data.get("host")
-    database=data.get("database")
-    password=quote_plus(data.get("password"))
+        username=data.get("username")
+        host=data.get("host")
+        database=data.get("database")
+        password=quote_plus(data.get("password"))
 
-    db_uri = f"mysql+mysqlconnector://{username}:{password}@{host}/{database}"
-    db=SQLDatabase.from_uri(db_uri)
+        db_uri = f"mysql+mysqlconnector://{username}:{password}@{host}/{database}"
+        db=SQLDatabase.from_uri(db_uri)
 
-    print(f"setting db to state...")
-    state.setDBToState(db)
+        state["db"]=db
+        print(f"""\nState updated with: \n
+        db: {type(state['db'])}
+              """)
+    except Exception as e:
+        print(f"error {e}")
+        return
+    
+    try:
+        # state["schema"] = []
+        
+        for table in state["db"].get_usable_table_names():
+            schema = state["db"].run(f"SHOW CREATE TABLE {table};")
+            state["schema"].append(schema)
 
-    print(f"setting schema to state...")
-    state.setSchemaToState()
-
+        log_message(f"Schema retrieval successful")
+        print(f"""\nState updated with: \n
+                schema: {type(state['schema'])} {len(state['schema'])}
+        """)
+    except Exception as e:
+        print(f"error {e}")
+        log_message(f"Error getting database schema: {e}")
+        return
+        
     try:
         engine = create_engine(db_uri)
         with engine.connect() as conn:

@@ -9,202 +9,359 @@ from module.tools import Tool
 from langchain_groq import ChatGroq
 from langchain import hub
 from langsmith import Client
+from IPython.display import Image, display
+from langgraph.graph import START, StateGraph, END 
 from dotenv import load_dotenv
+
 import ast
 import os
 
 data_source_bp=Blueprint('state', __name__)
 
-class State:
+class State(TypedDict):
 
-    _instance=None
+    db: object = None
+    llm: object = None
+    schema: List[str] = []
+    prompt: object = None
+    question: str = ""
+    query: str = ""
+    result: str = ""
+    retry: int=0
+    SQLValidity: str=""
+    SQLImprovement: str=""
+    data: dict = {}
+    tools: list = []
+    analysis: str = ""
+    visualization: object = None
 
-    def __init__(self):
-        self._db: object = None
-        self._llm: object = None
-        self._schema: List[str] = []
-        self._prompt: object = None
-        self._question: str = ""
-        self._query: str = ""
-        self._result: str = ""
-        self._data: dict = {}
-        self._tools: list = []
-        self._analysis: str = ""
-        self._visualization: object = None
+    # _instance=None
 
-    def getInstance():
-        '''
-        Returns State class' instance.
-        '''
-        if State._instance is None:
-            State._instance=State() # Create State object
+    # def __init__(self):
+    #     self._db: object = None
+    #     self._llm: object = None
+    #     self._schema: List[str] = []
+    #     self._prompt: object = None
+    #     self._question: str = ""
+    #     self._query: str = ""
+    #     self._result: str = ""
+    #     self._retry: int=0
+    #     self._SQLValidity: str=""
+    #     self._SQLImprovement: str=""
+    #     self._data: dict = {}
+    #     self._tools: list = []
+    #     self._analysis: str = ""
+    #     self._visualization: object = None
+    #     self._graph: object= None
 
-        return State._instance
+    # def getInstance():
+    #     '''
+    #     Returns State class' instance.
+    #     '''
+    #     if State._instance is None:
+    #         State._instance=State() # Create State object
+
+    #     return State._instance
     
-    # DB property
-    @property
-    def db(self) -> object:
-        return self._db
+    # # DB property
+    # @property
+    # def db(self) -> object:
+    #     return self._db
 
-    @db.setter
-    def db(self, value: object):
-        self._db = value  # No type restriction
+    # @db.setter
+    # def db(self, value: object):
+    #     self._db = value  # No type restriction
     
-    # LLM property
-    @property
-    def llm(self) -> object:
-        return self._llm
+    # # LLM property
+    # @property
+    # def llm(self) -> object:
+    #     return self._llm
 
-    @llm.setter
-    def llm(self, value: object):
-        self._llm = value  # No type restriction
+    # @llm.setter
+    # def llm(self, value: object):
+    #     self._llm = value  # No type restriction
 
-    # prompt property
-    @property
-    def prompt(self) -> object:
-        return self._prompt
+    # # prompt property
+    # @property
+    # def prompt(self) -> object:
+    #     return self._prompt
 
-    @prompt.setter
-    def prompt(self, value: object):
-        self._prompt = value  # No type restriction
+    # @prompt.setter
+    # def prompt(self, value: object):
+    #     self._prompt = value  # No type restriction
     
-    @property
-    def schema(self) -> List[str]:
-        return self._schema
+    # @property
+    # def schema(self) -> List[str]:
+    #     return self._schema
 
-    @schema.setter
-    def schema(self, value: List[str]):
-        if not isinstance(value, list):
-            raise ValueError("Schema must be a list of strings.")
-        self._schema = value
+    # @schema.setter
+    # def schema(self, value: List[str]):
+    #     if not isinstance(value, list):
+    #         raise ValueError("Schema must be a list of strings.")
+    #     self._schema = value
 
-    @property
-    def question(self) -> str:
-        return self._question
+    # @property
+    # def question(self) -> str:
+    #     return self._question
 
-    @question.setter
-    def question(self, value: str):
-        if not isinstance(value, str):
-            raise ValueError("Question must be a string.")
-        self._question = value
+    # @question.setter
+    # def question(self, value: str):
+    #     if not isinstance(value, str):
+    #         raise ValueError("Question must be a string.")
+    #     self._question = value
 
-    @property
-    def query(self) -> str:
-        return self._query
+    # @property
+    # def query(self) -> str:
+    #     return self._query
 
-    @query.setter
-    def query(self, value: str):
-        if not isinstance(value, str):
-            raise ValueError("Query must be a string.")
-        self._query = value
+    # @query.setter
+    # def query(self, value: str):
+    #     if not isinstance(value, str):
+    #         raise ValueError("Query must be a string.")
+    #     self._query = value
 
-    @property
-    def result(self) -> str:
-        return self._result
+    # @property
+    # def result(self) -> str:
+    #     return self._result
 
-    @result.setter
-    def result(self, value: str):
-        if not isinstance(value, str):
-            raise ValueError("Result must be a string.")
-        self._result = value
+    # @result.setter
+    # def result(self, value: str):
+    #     if not isinstance(value, str):
+    #         raise ValueError("Result must be a string.")
+    #     self._result = value
 
-    # Data property
-    @property
-    def data(self) -> dict:
-        return self._data
+    # @property
+    # def retry(self) -> str:
+    #     return self._retry
 
-    @data.setter
-    def data(self, value: str):
-        if not isinstance(value, dict):
-            raise ValueError("Data must be a dictionary.")
-        self._data = value
+    # @retry.setter
+    # def retry(self, value: str):
+    #     if not isinstance(value, int):
+    #         raise ValueError("Result must be an integer.")
+    #     self._retry = value
+    
+    # @property
+    # def SQLValidity(self) -> str:
+    #     return self._SQLValidity
 
-    @property
-    def tools(self) -> list:
-        return self._tools
+    # @SQLValidity.setter
+    # def SQLValidity(self, value: str):
+    #     if not isinstance(value, str):
+    #         raise ValueError("Result must be a string.")
+    #     self._SQLValidity = value
 
-    @tools.setter
-    def tools(self, value: list):
-        if not isinstance(value, list):
-            raise ValueError("Tools must be a list.")
-        self._tools = value
+    # @property
+    # def SQLImprovement(self) -> str:
+    #     return self._SQLImprovement
 
-    # Analysis property
-    @property
-    def analysis(self) -> str:
-        return self._analysis
+    # @SQLImprovement.setter
+    # def SQLImprovement(self, value: str):
+    #     if not isinstance(value, str):
+    #         raise ValueError("Result must be a string.")
+    #     self._SQLImprovement = value
 
-    @analysis.setter
-    def analysis(self, value: str):
-        if not isinstance(value, str):
-            raise ValueError("Analysis must be a string.")
-        self._analysis = value
+    # # Data property
+    # @property
+    # def data(self) -> dict:
+    #     return self._data
 
-    # Visualization property
-    @property
-    def visualization(self) -> object:
-        return self._visualization
+    # @data.setter
+    # def data(self, value: str):
+    #     if not isinstance(value, dict):
+    #         raise ValueError("Data must be a dictionary.")
+    #     self._data = value
 
-    @visualization.setter
-    def visualization(self, value: object):
-        self._visualization = value  # No type restriction
+    # @property
+    # def tools(self) -> list:
+    #     return self._tools
 
-    def writeQuery(self):
+    # @tools.setter
+    # def tools(self, value: list):
+    #     if not isinstance(value, list):
+    #         raise ValueError("Tools must be a list.")
+    #     self._tools = value
+
+    # # Analysis property
+    # @property
+    # def analysis(self) -> str:
+    #     return self._analysis
+
+    # @analysis.setter
+    # def analysis(self, value: str):
+    #     if not isinstance(value, str):
+    #         raise ValueError("Analysis must be a string.")
+    #     self._analysis = value
+
+    # # Visualization property
+    # @property
+    # def visualization(self) -> object:
+    #     return self._visualization
+
+    # @visualization.setter
+    # def visualization(self, value: object):
+    #     self._visualization = value  # No type restriction
+
+    # @property
+    # def graph(self) -> object:
+    #     return self._graph
+
+    # @graph.setter
+    # def graph(self, value: object):
+    #     self._graph = value  # No type restriction
+
+class StateMethods:
+
+    def writeQuery(state: State, question=None):
         """Generate SQL query to fetch information."""
-        prompt = self.prompt.invoke(
+
+        print("\nStarting Node writeQuery()\n")
+
+        columns = ', '.join([col for col in state["schema"] if isinstance(col, str)])
+        prompt = state["prompt"].invoke(
             {
                 "dialect": "mysql",
                 "top_k": 10,
-                "table_info": self.schema,
-                "input": self.question,
+                "table_info": state["schema"],
+                "input": f"""
+                    {state["question"]}\n\nImportant: Available columns include: {columns}.
+                    When answering, use the most human-readable field available.  
+                    If a field is a foreign key, join the referenced table and show its descriptive column.
+                    If the field is an ID, but there also exists a descriptive and human readable field of it within the same table, use the descriptive column.
+
+                    If the SQL fails, you are required to generate a new one while considering this improvement: {state["SQLImprovement"]}
+                """
             }
         )
-        structured_llm = self.llm.with_structured_output(QueryOutput)
-        result = structured_llm.invoke(prompt)
-        self.query=result["query"]
-        return self.query
-    
-    def executeQuery(self):
-            """Execute SQL query."""
-            execute_query_tool=QuerySQLDatabaseTool(db=self.db)
-            self.result=execute_query_tool.invoke(self.query)
-            # print(f"{type(data)}")
-            return self.result
-    
-    def generateDF(self):
-        """Generate dictionary based on the data provided and user prompt."""
-        prompt = f"""
-            Given the following user question and data, generate a dictionary containing the name of the column and the corresponding data.
-            Your response will be converted directly into a dataframe, hence your response should only be in form of dictionary only.
+        try:
+            print("Writing Query")
+            print(type(state["prompt"]))
+            print(type(prompt))
+            structured_llm = state["llm"].with_structured_output(QueryOutput)
+            result = structured_llm.invoke(prompt)
+            state["query"]=result["query"]
+            print(type(state["query"]))
 
-            f'Question: {self.question}\n'
-            f'SQL Result: {self.result}'
+            return state
+        except Exception as e:
+            print(e)
+            return
+    
+    def executeQuery(state: State):
+        """Execute SQL query and verify the query generated."""
+
+        print("\nStarting Node executeQuery()\n")
+
+        try: 
+            print("Executing Query")
+            execute_query_tool=QuerySQLDatabaseTool(db=state["db"])
+            state["result"]=execute_query_tool.invoke(state["query"])
+            print(type(state["result"]))
+        except Exception as e:
+            print(f"ERROR! {e}")
+        
+        prompt = f"""
+        You are required to verify the SQL query generated whether it is executable or not. 
+
+        f'SQL Schema: {state["schema"]}'
+        f'SQL Question: {state["question"]}'
+        f'SQL Query: {state["query"]}'
+        f'SQL Result: {state["result"]}'
+
+        You are required to response with only one (1) string:
+        If it is executable and valid, response with: valid
+        If it is not executable, returns error, or the question does not relate to the database schema at all, response with: invalid          
+        """
+
+        try:
+            print("Evaluating Query")
+            response = state["llm"].invoke(prompt)
+            state["SQLValidity"]=response.content
+            print(f"{state['SQLValidity']} {type(state['SQLValidity'])}")
+            return state
+        except Exception as e:
+            print(f"ERROR! {e}")
+
+        return state
+                     
+    def improveQuery(state: State):
+        print("\nStarting Node improveQuery()\n")
+
+        print(f"try number {state['retry']}")
+        if state["retry"]<=3:
+            state["retry"]+=1
+        
+            """Verify the query generated ."""
+            prompt = f"""
+                You are required to provide fix for the SQL query based on the SQL query and the error message. 
+                The SQL should be sytatically correct, adhere to the schema provided, and following MySQL dialect.
+
+                f'Schema: {state["schema"]}'
+                f'SQL Query: {state["query"]}'
+                f'SQL Result: {state["result"]}'
+                """
+            try:
+                print("Improving Query")
+                
+                response = state["llm"].invoke(prompt)
+                state["SQLImprovement"]=response.content
+                print(state["SQLImprovement"])
+                return state
+            except Exception as e:
+                print(f"error: {e}")
+                return
+        else:
+            print("max retry reached")
+            return
+          
+    def generateDF(state: State):
+        """Generate dictionary based on the data provided and user prompt."""
+
+        print("\nStarting Node generateDF()\n")
+
+
+        prompt = f"""
+            Given the following user question, SQL query, and result from the SQL query, generate a dictionary containing the name of the column and the corresponding data.
+            Your response will be converted directly into a dataframe, hence your response should only be in form of dictionary only.
+            Do not generate a nested dictionary. Each column should be converted into a single key in the dictionary.
+
+            f'Question: {state["question"]}\n'
+            f'SQL Query: {state["query"]}
+            f'SQL Result: {state["result"]}'
             
             """
         
-        response = self.llm.invoke(prompt)
-        data={"df": response.content}
-        dict_data = ast.literal_eval(data['df'])  # Convert to dictionary
-        # print(f"{type(dict_data)}")
-        self.data=dict_data
+        response = state["llm"].invoke(prompt)
 
-        return self.data
+        try:
+            data={"df": response.content}
+            dict_data = ast.literal_eval(data['df'])  # Convert to dictionary
+            # print(f"{type(dict_data)}")
+            state["data"]=dict_data
+            print(type(state["data"]))
+
+
+            return state
+        except Exception as e:
+            return f"error {e}"
     
-    def chooseVisualization(self):
+    def chooseVisualization(state: State):
+            
+            print("\nStarting Node chooseVisualization()\n")
+
 
             prompt=f"""
             
             You are given several tools that correspond to different types of data visualization graphs and charts.
-            Given the following user questions, the result from the database, the data, and the tools, choose the best tool to represent the data.
+            Given the following user questions, the data, and the tools, choose the best tool to represent the data.
+            
 
-            Question: {self.question}
-            Result: {self.result}
-            Data: {self.data}
-            Tools: {self.tools}
+            Question: {state["question"]}
+            Data: {state["data"]}
+            Tools: {state["tools"]}
 
             """
 
-            llm_with_tools=self.llm.bind_tools(self.tools)
+            llm_with_tools=state["llm"].bind_tools(state["tools"])
             # chain = llm_with_tools | human_approval
             
             try:
@@ -222,77 +379,102 @@ class State:
                 function_args = json.loads(function_call["function"]["arguments"])  # Convert string to dict
 
                 # Step 3: Execute tool dynamically using LangChain's `.invoke()`
-                tool_mapping = {tool.name: tool for tool in self.tools}  # Map tool names
+                tool_mapping = {tool.name: tool for tool in state["tools"]}  # Map tool names
 
                 if function_name in tool_mapping:
                     print(function_name)
                     print(function_args)
                     visualization_result = tool_mapping[function_name].invoke(input=function_args)
-                    self.visualization = visualization_result
+                    # self.visualization = visualization_result
+                    # print(type(self.visualization))
 
-                    # Get the parent directory (folder containing `State.py`'s folder)
-                    parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                    #fig = self.visualization
+                    # fig.write_html("visual.html")
+                    state["visualization"] = visualization_result.to_html(full_html=False, include_plotlyjs='cdn')
+                    print(type(state["visualization"]))
 
-                    # Ensure the folder exists (optional)
-                    visualization_folder = os.path.join(parent_folder, "prompt")
-                    os.makedirs(visualization_folder, exist_ok=True)
-
-                    # Save HTML file inside the parent folder (or "visualizations" inside it)
-                    html_file = os.path.join(visualization_folder, "visual.html")
-
-                    # Save the visualization
-                    fig = self.visualization
-                    fig.write_html(html_file)
-
-                    html_file = os.path.join(visualization_folder, "visual.html")
-                    fig = self.visualization
-                    fig.write_html(html_file)
-
-                    return self.visualization
+                    return state
                 else:
                     raise ValueError(f"Unknown function: {function_name}")
 
             except Exception as e:
                 print(e)
+                return
 
-    def generateAnalysis(self):
+    def generateAnalysis(state: State):
         """Answer question using retrieved information as context."""
+
+        print("\nStarting Node generateAnalysis()\n")
+
         prompt = (
             "Given the following user question, corresponding SQL query, "
             "and SQL result, answer the user question. Make sure to go into detail and summarize the trends and main outcome. \n\n"
-            f'Question: {self.question}\n'
-            f'SQL Query: {self.query}\n'
-            f'SQL Result: {self.result}'
+            f'Question:     {state["question"]}\n'
+            f'SQL Query:    {state["query"]}\n'
+            f'SQL Result:   {state["result"]}'
         )
-        self.analysis = self.llm.invoke(prompt).content
-        return self.analysis
-    
-
-    def setDBToState(self, db):
         try:
-            self.db=db
-            log_message(f"Setting Data Source Connection to state successful")
-            print(f"state.db set! {state.db}")
+            print("Generating Analysis")
+            state["analysis"] = state["llm"].invoke(prompt).content
+            print(type(state["analysis"]))
+
+            return state
         except Exception as e:
-            log_message(f"Error setting Data Source Connection to state: {e}")
+            print(f"error {e}")
+            return
+
+    def agentOutputValidator(state: State):
+        '''
+        Verify the output of agents routing them to the necessary agent to reproduce the output
+        '''
+
+        prompt="""
+
+        You are the validator and router agent. 
+        Given the output of a certain agent, you must decide whether the output is acceptable to continue to the next agent, or the output should be done again by the agent most likely responsible for it.
+        Here are the agents and its expeccted input and output:
 
 
-    def setSchemaToState(self):
-        try:
-            self.schema = []
+
+        """
+
+    # def setDBToState(state: State, db):
+    #     try:
+    #         state["db"]=db
+    #         log_message(f"Setting Data Source Connection to state successful")
+    #         print(f"state['db'] set! {state["db"]}")
+    #     except Exception as e:
+    #         log_message(f"Error setting Data Source Connection to state: {e}")
+    #         return
+
+    # def setSchemaToState(state: State):
+    #     print(f"\nsetting state.schema!")
+
+    #     # if(schema):
+
+    #     #     state["schema"] = schema if schema is not None else state["question"]
+    #     #     print(f"\ncustom state['schema'] set! {state.schema}")
+    #     #     return
+        
+    #     # print(f"\skipping custom state['schema']!")
+
+        
+    #     try:
+    #         state["schema"] = []
             
-            for table in self.db.get_usable_table_names():
-                schema = self.db.run(f"SHOW CREATE TABLE {table};")
-                self.schema.append(schema)
+    #         for table in state["db"].get_usable_table_names():
+    #             schema = state["db"].run(f"SHOW CREATE TABLE {table};")
+    #             state["schema"].append(schema)
 
-            log_message(f"Schema retrieval successful")
-            print(f"\nstate.schema set! {state.schema}")
+    #         log_message(f"Schema retrieval successful")
+    #         print(f"\nstate['schema'] set! {state.schema}")
 
 
-        except Exception as e:
-            log_message(f"Error getting database schema: {e}")
+    #     except Exception as e:
+    #         log_message(f"Error getting database schema: {e}")
+    #         return
 
-    def setModelToState(self):
+    def getModel():
         load_dotenv()
 
         try:
@@ -303,6 +485,7 @@ class State:
 
         except Exception as e:
             log_message(f"Error retrieving LLM api key and model name: {e}")
+            return
 
         try:
             llm=ChatGroq(model=model_name)
@@ -310,13 +493,17 @@ class State:
 
         except Exception as e:
             log_message(f"Error instantiating LLM: {e}")
+            return
 
         try:
-            self.llm=llm
-            log_message(f"Setting LLM to state successful")
-            print(f"\nstate.llm set! {self.llm}")
+            # log_message(f"Setting LLM to state successful")
+            # print(f"\nstate['llm'] set! {state["llm"]}")
+            return llm
         except Exception as e:
             log_message(f"Error setting LLM to state: {e}")
+            return
+        
+    def getPrompt():
 
         try:
 
@@ -327,158 +514,99 @@ class State:
             # for message in query_prompt_template.messages:
             #     message.pretty_print()
 
-            self.prompt=query_prompt_template
+            # state["prompt"]=query_prompt_template
 
-            log_message("Prompt template retrieval successful")
-            print(f"\nstate.prompt set! {self.prompt}")
+            # log_message("Prompt template retrieval successful")
+            # print(f"\nstate['prompt'] set! {state["prompt"]}")
+
+            return query_prompt_template
 
         except Exception as e:
             log_message(f"Error: {e} retrieving prompt template from {loc}")
+            return
 
-    def setToolsToState(self):
+    def getTools():
         try:
             tools=Tool()
-            self.tools=tools.tools
-            log_message("Tools definition successful")
-            print(f"\nstate.tools set! {self.tools}")
+            tools_list=tools.tools
+            # log_message("Tools definition successful")
+            # print(f"\nstate['tools'] set! {state["tools"]}")
+            return tools_list
 
         except Exception as e:
             log_message(f"Error defining tools: {e}")
+            return 
 
-    def writeQuery(self):
-        """Generate SQL query to fetch information."""
-
-        try:
-            print(f"generating query from input {self.question}")
-
-            print(f"generating prompt")
-            prompt = self.prompt.invoke(
-                {
-                    "dialect": "mysql",
-                    "top_k": 10,
-                    "table_info": self.schema,
-                    "input": self.question,
-                }
-            )
-            print(prompt)
-
-            print(f"generating structured LLM")
-            structured_llm = self.llm.with_structured_output(QueryOutput)
-            print(structured_llm)
-
-            print(f"generating result")
-            result = structured_llm.invoke(prompt)
-            print(result)
-
-
-            self.query=result["query"]
-            print(result["query"])
-            return self.query
-        except Exception as e:
-            return f"Error writing query: {e}"
-        
-    def executeQuery(self):
-        """Execute SQL query."""
-        execute_query_tool=QuerySQLDatabaseTool(db=self.db)
-        self.result=execute_query_tool.invoke(self.query)
-        # print(f"{type(data)}")
-        return self.result
-    
-    def generateDF(self):
-        """Generate dictionary based on the data provided and user prompt."""
-        prompt = f"""
-            Given the following user question and data, generate a dictionary containing the name of the column and the corresponding data.
-            Your response will be converted directly into a dataframe, hence your response should only be in form of dictionary only.
-
-            f'Question: {self.question}\n'
-            f'SQL Result: {self.result}'
-            
-            """
-        
-        response = self.llm.invoke(prompt)
-        data={"df": response.content}
-        dict_data = ast.literal_eval(data['df'])  # Convert to dictionary
-        # print(f"{type(dict_data)}")
-        self.data=dict_data
-
-        return self.data
-    
-    def chooseVisualization(self):
-
-            prompt=f"""
-            
-            You are given several tools that correspond to different types of data visualization graphs and charts.
-            Given the following user questions, the result from the database, the data, and the tools, choose the best tool to represent the data.
-
-            Question: {self.question}
-            Result: {self.result}
-            Data: {self.data}
-            Tools: {self.tools}
-
-            """
-
-            llm_with_tools=self.llm.bind_tools(self.tools)
-            # chain = llm_with_tools | human_approval
-            
-            try:
-
-                # Step 1: Invoke LLM to get the function call
-                response = llm_with_tools.invoke(prompt)
-
-                # Step 2: Extract tool calls from AIMessage
-                tool_calls = response.additional_kwargs.get("tool_calls", [])
-                if not tool_calls:
-                    raise ValueError("No tool call returned by the LLM.")
-
-                function_call = tool_calls[0]  # Assuming a single function call
-                function_name = function_call["function"]["name"]
-                function_args = json.loads(function_call["function"]["arguments"])  # Convert string to dict
-
-                # Step 3: Execute tool dynamically using LangChain's `.invoke()`
-                tool_mapping = {tool.name: tool for tool in self.tools}  # Map tool names
-
-                if function_name in tool_mapping:
-                    print(function_name)
-                    print(function_args)
-                    visualization_result = tool_mapping[function_name].invoke(input=function_args)
-                    self.visualization = visualization_result
-
-                    # Get the parent directory (folder containing `State.py`'s folder)
-                    parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../my-react-app/public"))
-
-                    # Ensure the folder exists (optional)
-                    visualization_folder = os.path.join(parent_folder, "generated-visual")
-                    os.makedirs(visualization_folder, exist_ok=True)
-
-                    # Save HTML file inside the parent folder (or "visualizations" inside it)
-                    html_file = os.path.join(visualization_folder, "visual.html")
-
-                    # Save the visualization
-                    fig = self.visualization
-                    fig.write_html(html_file)
-
-                    html_file = os.path.join(visualization_folder, "visual.html")
-                    fig = self.visualization
-                    fig.write_html(html_file)
-
-                    return self.visualization
-                else:
-                    raise ValueError(f"Unknown function: {function_name}")
-
-            except Exception as e:
-                print(e)
-    
 class QueryOutput(TypedDict):
     """Generated SQL query."""
 
     query: Annotated[str, ..., "Syntactically valid SQL query."]
 
-state=State.getInstance()
-print(f"\nState created: {state}")
+state: State={
+    "db": None,
+    "llm": None,
+    "schema": [],
+    "prompt": None,
+    "question": "",
+    "query": "",
+    "result": "",
+    "retry": 0,
+    "SQLValidity": "",
+    "SQLImprovement": "",
+    "data": {},
+    "tools": [],
+    "analysis": "",
+    "visualization": None,
+}
 
-state.setModelToState()
-state.setToolsToState()
+print(f"\nState created: {type(state)}")
 
+state["llm"]=StateMethods.getModel()
+state["prompt"]=StateMethods.getPrompt()
+state["tools"]=StateMethods.getTools()
 
-    
+print(f"""\nState initialized with:\n
+      llm: {type(state["llm"])}\n
+      prompt: {type(state["prompt"])}\n
+      tools: {type(state["tools"])} {len(state["tools"])}\n
+""")
+
+try:
+
+    graph_builder = StateGraph(State)
+
+    graph_builder.add_node("writeQuery", StateMethods.writeQuery)
+    graph_builder.add_node("executeQuery", StateMethods.executeQuery)
+    graph_builder.add_node("improveQuery", StateMethods.improveQuery)
+    graph_builder.add_node("generateDF", StateMethods.generateDF)
+    graph_builder.add_node("chooseVisualization", StateMethods.chooseVisualization)
+    graph_builder.add_node("generateAnalysis", StateMethods.generateAnalysis)
+
+    graph_builder.add_edge(START, "writeQuery")
+    graph_builder.add_edge("writeQuery", "executeQuery")
+
+    graph_builder.add_conditional_edges("executeQuery", lambda state: state['SQLValidity'], {
+        "valid": "generateDF",
+        "invalid": "improveQuery"
+    })
+    graph_builder.add_conditional_edges(
+        "improveQuery", 
+            lambda state: "retry" if state["retry"] < 3 else "max attempt",
+        {
+        "retry": "writeQuery",
+        "max attempt": END
+    })
+
+    graph_builder.add_edge("generateDF", "chooseVisualization")
+    graph_builder.add_edge("chooseVisualization", "generateAnalysis")
+    graph_builder.add_edge("generateAnalysis", END)
+
+    graph = graph_builder.compile()
+    graphVisual = graph.get_graph().draw_mermaid_png()
+
+    print(f"graph initialized: {type(graph)}")
+    print(f"graph visual initialized: {type(graphVisual)}")
+
+except Exception as e:
+    print(f"error {e}")
 
