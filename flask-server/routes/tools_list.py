@@ -10,7 +10,6 @@ tools_bp = Blueprint('tools', __name__)
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-
 @tools_bp.route("/tools-list", methods=["GET"])
 def get_tools():
     t = Tool()
