@@ -29,189 +29,18 @@ class State(TypedDict):
     result: str = ""
     retry: int=0
     SQLValidity: str=""
-    SQLImprovement: str=""
     data: dict = {}
     tools: list = []
     analysis: str = ""
     visualization: object = None
+    nextNode: str=""
+    routerCount: int=0
+    improvement: str=""
 
-    # _instance=None
-
-    # def __init__(self):
-    #     self._db: object = None
-    #     self._llm: object = None
-    #     self._schema: List[str] = []
-    #     self._prompt: object = None
-    #     self._question: str = ""
-    #     self._query: str = ""
-    #     self._result: str = ""
-    #     self._retry: int=0
-    #     self._SQLValidity: str=""
-    #     self._SQLImprovement: str=""
-    #     self._data: dict = {}
-    #     self._tools: list = []
-    #     self._analysis: str = ""
-    #     self._visualization: object = None
-    #     self._graph: object= None
-
-    # def getInstance():
-    #     '''
-    #     Returns State class' instance.
-    #     '''
-    #     if State._instance is None:
-    #         State._instance=State() # Create State object
-
-    #     return State._instance
-    
-    # # DB property
-    # @property
-    # def db(self) -> object:
-    #     return self._db
-
-    # @db.setter
-    # def db(self, value: object):
-    #     self._db = value  # No type restriction
-    
-    # # LLM property
-    # @property
-    # def llm(self) -> object:
-    #     return self._llm
-
-    # @llm.setter
-    # def llm(self, value: object):
-    #     self._llm = value  # No type restriction
-
-    # # prompt property
-    # @property
-    # def prompt(self) -> object:
-    #     return self._prompt
-
-    # @prompt.setter
-    # def prompt(self, value: object):
-    #     self._prompt = value  # No type restriction
-    
-    # @property
-    # def schema(self) -> List[str]:
-    #     return self._schema
-
-    # @schema.setter
-    # def schema(self, value: List[str]):
-    #     if not isinstance(value, list):
-    #         raise ValueError("Schema must be a list of strings.")
-    #     self._schema = value
-
-    # @property
-    # def question(self) -> str:
-    #     return self._question
-
-    # @question.setter
-    # def question(self, value: str):
-    #     if not isinstance(value, str):
-    #         raise ValueError("Question must be a string.")
-    #     self._question = value
-
-    # @property
-    # def query(self) -> str:
-    #     return self._query
-
-    # @query.setter
-    # def query(self, value: str):
-    #     if not isinstance(value, str):
-    #         raise ValueError("Query must be a string.")
-    #     self._query = value
-
-    # @property
-    # def result(self) -> str:
-    #     return self._result
-
-    # @result.setter
-    # def result(self, value: str):
-    #     if not isinstance(value, str):
-    #         raise ValueError("Result must be a string.")
-    #     self._result = value
-
-    # @property
-    # def retry(self) -> str:
-    #     return self._retry
-
-    # @retry.setter
-    # def retry(self, value: str):
-    #     if not isinstance(value, int):
-    #         raise ValueError("Result must be an integer.")
-    #     self._retry = value
-    
-    # @property
-    # def SQLValidity(self) -> str:
-    #     return self._SQLValidity
-
-    # @SQLValidity.setter
-    # def SQLValidity(self, value: str):
-    #     if not isinstance(value, str):
-    #         raise ValueError("Result must be a string.")
-    #     self._SQLValidity = value
-
-    # @property
-    # def SQLImprovement(self) -> str:
-    #     return self._SQLImprovement
-
-    # @SQLImprovement.setter
-    # def SQLImprovement(self, value: str):
-    #     if not isinstance(value, str):
-    #         raise ValueError("Result must be a string.")
-    #     self._SQLImprovement = value
-
-    # # Data property
-    # @property
-    # def data(self) -> dict:
-    #     return self._data
-
-    # @data.setter
-    # def data(self, value: str):
-    #     if not isinstance(value, dict):
-    #         raise ValueError("Data must be a dictionary.")
-    #     self._data = value
-
-    # @property
-    # def tools(self) -> list:
-    #     return self._tools
-
-    # @tools.setter
-    # def tools(self, value: list):
-    #     if not isinstance(value, list):
-    #         raise ValueError("Tools must be a list.")
-    #     self._tools = value
-
-    # # Analysis property
-    # @property
-    # def analysis(self) -> str:
-    #     return self._analysis
-
-    # @analysis.setter
-    # def analysis(self, value: str):
-    #     if not isinstance(value, str):
-    #         raise ValueError("Analysis must be a string.")
-    #     self._analysis = value
-
-    # # Visualization property
-    # @property
-    # def visualization(self) -> object:
-    #     return self._visualization
-
-    # @visualization.setter
-    # def visualization(self, value: object):
-    #     self._visualization = value  # No type restriction
-
-    # @property
-    # def graph(self) -> object:
-    #     return self._graph
-
-    # @graph.setter
-    # def graph(self, value: object):
-    #     self._graph = value  # No type restriction
 
 class StateMethods:
 
-    def writeQuery(state: State, question=None):
+    def writeQuery(state: State):
         """Generate SQL query to fetch information."""
 
         print("\nStarting Node writeQuery()\n")
@@ -228,7 +57,8 @@ class StateMethods:
                     If a field is a foreign key, join the referenced table and show its descriptive column.
                     If the field is an ID, but there also exists a descriptive and human readable field of it within the same table, use the descriptive column.
 
-                    If the SQL fails, you are required to generate a new one while considering this improvement: {state["SQLImprovement"]}
+                    If the SQL fails, you are required to generate a new one while considering this improvement: {state["improvement"]}
+                    If the improvement is empty, ignore the improvement
                 """
             }
         )
@@ -255,6 +85,7 @@ class StateMethods:
             print("Executing Query")
             execute_query_tool=QuerySQLDatabaseTool(db=state["db"])
             state["result"]=execute_query_tool.invoke(state["query"])
+            print((state["result"]))
             print(type(state["result"]))
         except Exception as e:
             print(f"ERROR! {e}")
@@ -269,7 +100,8 @@ class StateMethods:
 
         You are required to response with only one (1) string:
         If it is executable and valid, response with: valid
-        If it is not executable, returns error, or the question does not relate to the database schema at all, response with: invalid          
+        If it is empty, not executable, error, response with: invalid   
+        If the question does not relate to the database schema at all, response with: end
         """
 
         try:
@@ -298,13 +130,14 @@ class StateMethods:
                 f'Schema: {state["schema"]}'
                 f'SQL Query: {state["query"]}'
                 f'SQL Result: {state["result"]}'
+                
                 """
             try:
                 print("Improving Query")
                 
                 response = state["llm"].invoke(prompt)
-                state["SQLImprovement"]=response.content
-                print(state["SQLImprovement"])
+                state["improvement"]=response.content
+                print(state["improvement"])
                 return state
             except Exception as e:
                 print(f"error: {e}")
@@ -327,7 +160,11 @@ class StateMethods:
             f'Question: {state["question"]}\n'
             f'SQL Query: {state["query"]}
             f'SQL Result: {state["result"]}'
-            
+
+            Take into account the existing dictionary and the required improvement. Ignore if empty:
+
+            f'Existing Dictionary: {state["data"]}
+            f'Required Improvement: {state["improvement"]}'
             """
         
         response = state["llm"].invoke(prompt)
@@ -358,6 +195,11 @@ class StateMethods:
             Question: {state["question"]}
             Data: {state["data"]}
             Tools: {state["tools"]}
+
+            Take into account the existing visualization and the required improvement. Ignore if empty:
+
+            f'Existing Visualization: {state["visualization"]}
+            f'Required Improvement: {state["improvement"]}'
 
             """
 
@@ -406,12 +248,17 @@ class StateMethods:
 
         print("\nStarting Node generateAnalysis()\n")
 
-        prompt = (
-            "Given the following user question, corresponding SQL query, "
-            "and SQL result, answer the user question. Make sure to go into detail and summarize the trends and main outcome. \n\n"
-            f'Question:     {state["question"]}\n'
-            f'SQL Query:    {state["query"]}\n'
-            f'SQL Result:   {state["result"]}'
+        prompt = (f"""
+            Given the following user question and the data, answer the user question using the data. 
+            Make sure to go into detail and summarize the trends and main outcome. \n\n
+            'Question:     {state["question"]}\n'
+            'SQL Result:   {state["result"]}'
+
+            Take into account the existing analysis and the required improvement. Ignore if empty:
+
+            f'Existing Analysis: {state['analysis']}
+            f'Required Improvement: {state['improvement']}'
+            """
         )
         try:
             print("Generating Analysis")
@@ -428,57 +275,109 @@ class StateMethods:
         Verify the output of agents routing them to the necessary agent to reproduce the output
         '''
 
-        prompt="""
+        print("\nStarting Node agentOutputValidator()\n")
 
-        You are the validator and router agent. 
-        Given the output of a certain agent, you must decide whether the output is acceptable to continue to the next agent, or the output should be done again by the agent most likely responsible for it.
-        Here are the agents and its expeccted input and output:
+        prompt=f"""
 
+        you are the router.
+        you must analyze the prompt of {state["question"]} and the input from four different agent.
+        your responsibility is to determine the next agent to go to. 
+        given the current state of the input, determine the agent responsible for the next step.
+        the next agent must follow the order of:
 
+        1. generateDF
+        2. chooseVisualization
+        3. generateAnalysis
+
+        if the input of an agent is empty or None, it indicates that the agent has not been reached yet.
+        analyze the input. if the input is not good enough to continue to the next agent and the input needs a rework, go to the agent responsible for the input using this form of dictionary: 
+
+        {{ 
+
+        "agentName": "<agentName>",
+        "improvementMessage": "<improvementMessage>"
+
+        }}
+
+        if no improvements are needed and can move to the next agent, keep the improvement message empty:
+        
+        {{ 
+
+        "agentName": "<agentName>",
+        "improvementMessage": ""
+
+        }}
+
+        input:
+
+        1. generateDF = {state["data"]}
+        2. chooseVisualization = {state["visualization"]}
+        3. generateAnalysis = {state["analysis"]}
+
+        your response will be converted directly into a dictionary, hence it must only be in form of a dictionary only. no other comment or response is needed besides the dictionary. the dictionary and dictionary only:
+
+        {{ 
+
+        "agentName": "<agentName>",
+        "improvementMessage": "<improvementMessage>"
+
+        }}
+
+        If all the input are validated and all are good to go, reply with this dict:
+
+        {{ 
+
+        "agentName": "end",
+        "improvementMessage": ""
+
+        }}
 
         """
-
-    # def setDBToState(state: State, db):
-    #     try:
-    #         state["db"]=db
-    #         log_message(f"Setting Data Source Connection to state successful")
-    #         print(f"state['db'] set! {state["db"]}")
-    #     except Exception as e:
-    #         log_message(f"Error setting Data Source Connection to state: {e}")
-    #         return
-
-    # def setSchemaToState(state: State):
-    #     print(f"\nsetting state.schema!")
-
-    #     # if(schema):
-
-    #     #     state["schema"] = schema if schema is not None else state["question"]
-    #     #     print(f"\ncustom state['schema'] set! {state.schema}")
-    #     #     return
         
-    #     # print(f"\skipping custom state['schema']!")
+        print(f"count {state['routerCount']}")
 
-        
-    #     try:
-    #         state["schema"] = []
+        if state["routerCount"]==5:
+            print("max router attempt")
+            return
+
+        try:     
+            state["routerCount"]+=1
+            response = state["llm"].invoke(prompt)
+            response_string=response.content
+            print(response_string)
+            print(type(response_string))
+
+            formatted_response = json.loads(response_string)
+            print(f"agent name: {formatted_response['agentName']}")
+            print(f"improvement message: {formatted_response['improvementMessage']}")
+            print(type(formatted_response))
+
+            state["nextNode"]=formatted_response['agentName']
+            state["improvement"]=formatted_response['improvementMessage']
+            print(f"state['nextNode']: {state['nextNode']}")
+            print(f"state['improvement']: {state['improvement']}")
+
+            # if node=="generateDF":
+            #     state["nextNode"]=node 
+            # elif node=="chooseVisualization":
+            #     state["nextNode"]=node
+            # elif node=="generateAnalysis":
+            #     state["nextNode"]=node
+            # else:
+            #     print("end or invalid output")
+            #     state["nextNode"]="end"
             
-    #         for table in state["db"].get_usable_table_names():
-    #             schema = state["db"].run(f"SHOW CREATE TABLE {table};")
-    #             state["schema"].append(schema)
-
-    #         log_message(f"Schema retrieval successful")
-    #         print(f"\nstate['schema'] set! {state.schema}")
-
-
-    #     except Exception as e:
-    #         log_message(f"Error getting database schema: {e}")
-    #         return
+            return state
+        except Exception as e:
+            print(f"error: {e}")
+            return
 
     def getModel():
         load_dotenv()
 
         try:
             api_key=os.getenv('GROQ_API_KEY')
+            print(api_key)
             langsmith_key=os.getenv('LANGSMITH_API_KEY')
             model_name=os.getenv('MODEL')
             log_message("LLM api key and model name retrieval successful")
@@ -537,76 +436,133 @@ class StateMethods:
             log_message(f"Error defining tools: {e}")
             return 
 
+    def getCleanState():
+        state: State={
+            "db": None,
+            "llm": None,
+            "schema": [],
+            "prompt": None,
+            "question": "",
+            "query": "",
+            "result": "",
+            "retry": 0,
+            "SQLValidity": "",
+            "improvement": "",
+            "data": {},
+            "tools": [],
+            "analysis": "",
+            "visualization": None,
+            "nextNode": "",
+            "routerCount": 0,
+        }
+
+        print(f"\nState created: {type(state)}")
+        return state
+
+    def setupInitialState(state: State):
+
+        try:
+            state["llm"]=StateMethods.getModel()
+            state["prompt"]=StateMethods.getPrompt()
+            state["tools"]=StateMethods.getTools()
+
+            print(f"""\nState initialized with:\n
+                llm: {type(state["llm"])}\n
+                prompt: {type(state["prompt"])}\n
+                tools: {type(state["tools"])} {len(state["tools"])}\n
+            """)
+            return state
+        
+        except Exception as e:
+            print(f"error {e}")
+
+    def setupGraph(state: State):
+        try:
+            graph_builder = StateGraph(State)
+
+            graph_builder.add_node("writeQuery", StateMethods.writeQuery)
+            graph_builder.add_node("executeQuery", StateMethods.executeQuery)
+            graph_builder.add_node("improveQuery", StateMethods.improveQuery)
+            graph_builder.add_node("generateDF", StateMethods.generateDF)
+            graph_builder.add_node("chooseVisualization", StateMethods.chooseVisualization)
+            graph_builder.add_node("generateAnalysis", StateMethods.generateAnalysis)
+            graph_builder.add_node("agentOutputValidator", StateMethods.agentOutputValidator)
+
+            graph_builder.add_edge(START, "writeQuery")
+            graph_builder.add_edge("writeQuery", "executeQuery")
+
+            graph_builder.add_conditional_edges("executeQuery", lambda state: state['SQLValidity'], {
+                "valid": "agentOutputValidator",
+                "invalid": "improveQuery",
+                "end": END
+            })
+            graph_builder.add_conditional_edges(
+                "improveQuery", 
+                    lambda state: "retry" if state["retry"] < 3 else "max attempt",
+                {
+                "retry": "writeQuery",
+                "max attempt": END
+            })
+
+            graph_builder.add_edge("generateDF", "agentOutputValidator")
+            graph_builder.add_edge("chooseVisualization", "agentOutputValidator")
+            graph_builder.add_edge("generateAnalysis", "agentOutputValidator")
+
+            graph_builder.add_conditional_edges(
+            "agentOutputValidator",
+            lambda state: 
+                "generateDF" if state["nextNode"] == "generateDF"
+                else "chooseVisualization" if state["nextNode"] == "chooseVisualization" 
+                else "generateAnalysis" if state["nextNode"] == "generateAnalysis"
+                else "end",  
+                {
+                "generateDF": "generateDF",
+                "chooseVisualization": "chooseVisualization",
+                "generateAnalysis": "generateAnalysis",
+                "end": END,
+
+                }
+            )
+
+            graph = graph_builder.compile()
+            print(f"graph initialized: {type(graph)}")
+            return graph
+        except Exception as e:
+            print(f"error {e}")
+            return e
+        
+    def visualizeGraph(graph):
+        try:
+            graphVisual = graph.get_graph().draw_mermaid_png()
+            print(f"graph visual initialized: {type(graphVisual)}")
+            return graphVisual
+        except Exception as e:
+            print(f"error {e}")
+            return e
+
+    def clearState(state: State):
+        state["question"]= ""
+        state["query"]= ""
+        state["result"]= ""
+        state["retry"]= 0
+        state["SQLValidity"]= ""
+        state["improvement"]= ""
+        state["data"]= {}
+        state["analysis"]= ""
+        state["visualization"]= None
+        state["nextNode"]= ""
+        state["routerCount"]= 0
+
+        print("\nState cleared")
+
+        return state
+
 class QueryOutput(TypedDict):
     """Generated SQL query."""
 
     query: Annotated[str, ..., "Syntactically valid SQL query."]
 
-state: State={
-    "db": None,
-    "llm": None,
-    "schema": [],
-    "prompt": None,
-    "question": "",
-    "query": "",
-    "result": "",
-    "retry": 0,
-    "SQLValidity": "",
-    "SQLImprovement": "",
-    "data": {},
-    "tools": [],
-    "analysis": "",
-    "visualization": None,
-}
-
-print(f"\nState created: {type(state)}")
-
-state["llm"]=StateMethods.getModel()
-state["prompt"]=StateMethods.getPrompt()
-state["tools"]=StateMethods.getTools()
-
-print(f"""\nState initialized with:\n
-      llm: {type(state["llm"])}\n
-      prompt: {type(state["prompt"])}\n
-      tools: {type(state["tools"])} {len(state["tools"])}\n
-""")
-
-try:
-
-    graph_builder = StateGraph(State)
-
-    graph_builder.add_node("writeQuery", StateMethods.writeQuery)
-    graph_builder.add_node("executeQuery", StateMethods.executeQuery)
-    graph_builder.add_node("improveQuery", StateMethods.improveQuery)
-    graph_builder.add_node("generateDF", StateMethods.generateDF)
-    graph_builder.add_node("chooseVisualization", StateMethods.chooseVisualization)
-    graph_builder.add_node("generateAnalysis", StateMethods.generateAnalysis)
-
-    graph_builder.add_edge(START, "writeQuery")
-    graph_builder.add_edge("writeQuery", "executeQuery")
-
-    graph_builder.add_conditional_edges("executeQuery", lambda state: state['SQLValidity'], {
-        "valid": "generateDF",
-        "invalid": "improveQuery"
-    })
-    graph_builder.add_conditional_edges(
-        "improveQuery", 
-            lambda state: "retry" if state["retry"] < 3 else "max attempt",
-        {
-        "retry": "writeQuery",
-        "max attempt": END
-    })
-
-    graph_builder.add_edge("generateDF", "chooseVisualization")
-    graph_builder.add_edge("chooseVisualization", "generateAnalysis")
-    graph_builder.add_edge("generateAnalysis", END)
-
-    graph = graph_builder.compile()
-    graphVisual = graph.get_graph().draw_mermaid_png()
-
-    print(f"graph initialized: {type(graph)}")
-    print(f"graph visual initialized: {type(graphVisual)}")
-
-except Exception as e:
-    print(f"error {e}")
-
+init_state=StateMethods.getCleanState()
+state=StateMethods.setupInitialState(init_state)
+graph=StateMethods.setupGraph(state)
+graphVisual=StateMethods.visualizeGraph(graph)

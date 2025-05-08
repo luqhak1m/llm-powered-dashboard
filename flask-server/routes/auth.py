@@ -26,6 +26,14 @@ def init_db():
 			password TEXT NOT NULL
 		)
 	''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_tools (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            tools TEXT,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -68,7 +76,6 @@ def currentUser():
                 "error": "Invalid Token"
             }
         ), 401
-
 
 @auth_bp.route("/login", methods=['POST'])
 def login():

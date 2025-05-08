@@ -15,7 +15,8 @@ class Tool:
         self.tools = [
             self.scatterPlot, 
             self.barChart,
-            self.choropleth
+            self.choropleth,
+            self.pieChart
         ]
     
     @tool
@@ -81,4 +82,21 @@ class Tool:
             title=title
         )
         
+    @tool
+    def pieChart(
+        data: Annotated[dict, "the dictionary containing the value to be plotted"], 
+        names: Annotated[str, "the name of the column from the data that contains the names"],
+        values: Annotated[str, "the name of the column from the data that contains the values"],
+        title: Annotated[str, "the title of the chart"],
+    ):
+        """ Generate a pie chart"""
+        df=pd.DataFrame(data)
+        return px.pie(
+            data_frame=df,
+            names=names,
+            values=values,
+            title=title
+        )
         
+    def get_tool_names(self):
+        return [tool.name for tool in self.tools]
