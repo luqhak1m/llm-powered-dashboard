@@ -40,6 +40,23 @@ const StateOutput = ({ output, onClose }) => {
   
         <h2>Visualization</h2>
         <p>{output.visualization !== null ? output.visualization : "No visualization"}</p>
+
+        <h2>Sidebar</h2>
+          <p>Extra tools or settings</p>
+
+          <h2>Agents Workflow</h2>
+              <img
+                src="http://127.0.0.1:5001/query/generated-graph"
+                alt="Agents Workflow"
+                style={{
+                    width: '100%',
+                    maxHeight: '500px',
+                    objectFit: 'contain',
+                    marginTop: '20px',
+                    border: '1px solid #ccc',
+                    borderRadius: '8px'
+                }}
+              />
       </section>
     );
   };

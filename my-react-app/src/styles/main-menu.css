@@ -34,14 +34,14 @@
     align-items: center;
     gap: 12px;
     padding: 16px;
-    font-size: 18px; /* <--- scale with viewport width */
+    font-size: 18px;
     background: #e6e6e6;
     color: rgb(0, 0, 0);
     border: 1px solid #ffffff;
     border-radius: 5px;
-    width: 90%; /* <--- instead of 100%, leave some margin */
-    max-width: 600px; /* <--- allow larger on bigger screens */
-    min-width: 200px; /* <--- safe minimum size */
+    width: 90%;
+    max-width: 600px;
+    min-width: 200px;
     cursor: pointer;
     transition: background 0.2s ease;
 }

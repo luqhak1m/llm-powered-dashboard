@@ -64,11 +64,13 @@ class StateMethods:
         )
         try:
             print("Writing Query")
-            print(type(state["prompt"]))
-            print(type(prompt))
+            # print(f"state[prompt]: {state['prompt']}")
+            # print(f"type state[prompt]: {type(state['prompt'])}")
+            # print(f"type prompt{type(prompt)}")
             structured_llm = state["llm"].with_structured_output(QueryOutput)
             result = structured_llm.invoke(prompt)
             state["query"]=result["query"]
+            print(f"state[query]: {(state['query'])}")
             print(type(state["query"]))
 
             return state
@@ -76,7 +78,7 @@ class StateMethods:
             print(e)
             return
     
-    def executeQuery(state: State):
+    def validateQuery(state: State):
         """Execute SQL query and verify the query generated."""
 
         print("\nStarting Node executeQuery()\n")
@@ -85,23 +87,32 @@ class StateMethods:
             print("Executing Query")
             execute_query_tool=QuerySQLDatabaseTool(db=state["db"])
             state["result"]=execute_query_tool.invoke(state["query"])
-            print((state["result"]))
+            print(f"state[result]: {(state['result'])}")
             print(type(state["result"]))
         except Exception as e:
             print(f"ERROR! {e}")
         
         prompt = f"""
+        <|begin_of_text|>
+
+        <|start_header_id|>system<|end_header_id|>
+
+        You are a SQL query validator.
         You are required to verify the SQL query generated whether it is executable or not. 
 
-        f'SQL Schema: {state["schema"]}'
-        f'SQL Question: {state["question"]}'
-        f'SQL Query: {state["query"]}'
-        f'SQL Result: {state["result"]}'
-
         You are required to response with only one (1) string:
-        If it is executable and valid, response with: valid
+        If it is executable, valid, correct, and doesn't require any fixes, response with: valid
         If it is empty, not executable, error, response with: invalid   
         If the question does not relate to the database schema at all, response with: end
+        
+        SQL Schema: {state["schema"]}
+        Question: {state["question"]}
+        SQL Query: {state["query"]}
+        SQL Result: {state["result"]}
+
+        <|eot_id|>
+
+        <|start_header_id|>assistant<|end_header_id|>
         """
 
         try:
@@ -124,13 +135,21 @@ class StateMethods:
         
             """Verify the query generated ."""
             prompt = f"""
+                <|begin_of_text|>
+
+                <|start_header_id|>system<|end_header_id|>
+                You are a SQL query validator.
                 You are required to provide fix for the SQL query based on the SQL query and the error message. 
                 The SQL should be sytatically correct, adhere to the schema provided, and following MySQL dialect.
 
                 f'Schema: {state["schema"]}'
                 f'SQL Query: {state["query"]}'
                 f'SQL Result: {state["result"]}'
-                
+                f'SQL Improvement: {state["improvement"]}'
+
+                <|eot_id|>
+
+                <|start_header_id|>assistant<|end_header_id|>                
                 """
             try:
                 print("Improving Query")
@@ -153,6 +172,9 @@ class StateMethods:
 
 
         prompt = f"""
+            <|begin_of_text|>
+            <|start_header_id|>system<|end_header_id|>
+            You are a SQL query result parser.
             Given the following user question, SQL query, and result from the SQL query, generate a dictionary containing the name of the column and the corresponding data.
             Your response will be converted directly into a dataframe, hence your response should only be in form of dictionary only.
             Do not generate a nested dictionary. Each column should be converted into a single key in the dictionary.
@@ -161,17 +183,26 @@ class StateMethods:
             f'SQL Query: {state["query"]}
             f'SQL Result: {state["result"]}'
 
-            Take into account the existing dictionary and the required improvement. Ignore if empty:
+            Take into account the existing dictionary and the required improvement. Ignore if empty.
 
             f'Existing Dictionary: {state["data"]}
             f'Required Improvement: {state["improvement"]}'
+            <|eot_id|>
+
+            <|start_header_id|>assistant<|end_header_id|>
             """
         
         response = state["llm"].invoke(prompt)
 
         try:
+            print(f"generateDF response: {response.content}")
+
             data={"df": response.content}
+            print(f"converting to dict")
+
             dict_data = ast.literal_eval(data['df'])  # Convert to dictionary
+
+            print(f"dict_data: {dict_data}")
             # print(f"{type(dict_data)}")
             state["data"]=dict_data
             print(type(state["data"]))
@@ -179,6 +210,7 @@ class StateMethods:
 
             return state
         except Exception as e:
+            print(f"error: {e}")
             return f"error {e}"
     
     def chooseVisualization(state: State):
@@ -187,24 +219,31 @@ class StateMethods:
 
 
             prompt=f"""
-            
+
+            <|begin_of_text|>
+            <|start_header_id|>system<|end_header_id|>
+            Environment: ipython
+            You are a data visualization expert.
             You are given several tools that correspond to different types of data visualization graphs and charts.
             Given the following user questions, the data, and the tools, choose the best tool to represent the data.
-            
 
             Question: {state["question"]}
             Data: {state["data"]}
             Tools: {state["tools"]}
 
             Take into account the existing visualization and the required improvement. Ignore if empty:
+            
+            Existing Visualization: {state["visualization"]}
+            Required Improvement: {state["improvement"]}
+            <|eot_id|>
 
-            f'Existing Visualization: {state["visualization"]}
-            f'Required Improvement: {state["improvement"]}'
-
+            <|start_header_id|>assistant<|end_header_id|>
+            
             """
 
             llm_with_tools=state["llm"].bind_tools(state["tools"])
             # chain = llm_with_tools | human_approval
+            print("tools " + str(state["tools"]))
             
             try:
 
@@ -228,7 +267,8 @@ class StateMethods:
                     print(function_args)
                     visualization_result = tool_mapping[function_name].invoke(input=function_args)
                     # self.visualization = visualization_result
-                    # print(type(self.visualization))
+                    print(type(visualization_result))
+                    print(f"chart function: {visualization_result}")
 
                     #fig = self.visualization
                     # fig.write_html("visual.html")
@@ -249,15 +289,38 @@ class StateMethods:
         print("\nStarting Node generateAnalysis()\n")
 
         prompt = (f"""
+            <|begin_of_text|>
+            <|start_header_id|>system<|end_header_id|>
+            You are a data analyst.      
             Given the following user question and the data, answer the user question using the data. 
-            Make sure to go into detail and summarize the trends and main outcome. \n\n
-            'Question:     {state["question"]}\n'
-            'SQL Result:   {state["result"]}'
+            Make sure to go into detail and summarize the trends and main outcome.
+            You must response in normal string format.
+            Do not include the raw SQL data inside your response.
+                  
+            Format it like this example:
+                  
+            Data Preview
+                  
+            <text of data preview>
+                  
+            Trend
+                  
+            <text of trend>
+                  
+            Main Outcome
+                  
+            <text of main outcome>
+                  
+            Question:     {state["question"]}
+            SQL Result:   {state["result"]}
 
             Take into account the existing analysis and the required improvement. Ignore if empty:
+            
+            Existing Analysis: {state['analysis']}
+            Required Improvement: {state['improvement']}
+            <|eot_id|>
 
-            f'Existing Analysis: {state['analysis']}
-            f'Required Improvement: {state['improvement']}'
+            <|start_header_id|>assistant<|end_header_id|>
             """
         )
         try:
@@ -279,6 +342,8 @@ class StateMethods:
 
         prompt=f"""
 
+        <|begin_of_text|>
+        <|start_header_id|>system<|end_header_id|>
         you are the router.
         you must analyze the prompt of {state["question"]} and the input from four different agent.
         your responsibility is to determine the next agent to go to. 
@@ -288,6 +353,7 @@ class StateMethods:
         1. generateDF
         2. chooseVisualization
         3. generateAnalysis
+        4. end
 
         if the input of an agent is empty or None, it indicates that the agent has not been reached yet.
         analyze the input. if the input is not good enough to continue to the next agent and the input needs a rework, go to the agent responsible for the input using this form of dictionary: 
@@ -299,7 +365,7 @@ class StateMethods:
 
         }}
 
-        if no improvements are needed and can move to the next agent, keep the improvement message empty:
+        if no improvements are needed and can move to the next agent. DO NOT go to the previous agent if there is no improvement message, only move to the next agent keep the improvement message empty:
         
         {{ 
 
@@ -314,7 +380,9 @@ class StateMethods:
         2. chooseVisualization = {state["visualization"]}
         3. generateAnalysis = {state["analysis"]}
 
-        your response will be converted directly into a dictionary, hence it must only be in form of a dictionary only. no other comment or response is needed besides the dictionary. the dictionary and dictionary only:
+        your response will be converted directly into a dictionary, hence it must only be in form of a dictionary only. 
+        no other comment or response is needed besides the dictionary. 
+        the dictionary and dictionary only:
 
         {{ 
 
@@ -331,6 +399,9 @@ class StateMethods:
         "improvementMessage": ""
 
         }}
+        <|eot_id|>
+
+        <|start_header_id|>assistant<|end_header_id|>
 
         """
         
@@ -356,16 +427,6 @@ class StateMethods:
             state["improvement"]=formatted_response['improvementMessage']
             print(f"state['nextNode']: {state['nextNode']}")
             print(f"state['improvement']: {state['improvement']}")
-
-            # if node=="generateDF":
-            #     state["nextNode"]=node 
-            # elif node=="chooseVisualization":
-            #     state["nextNode"]=node
-            # elif node=="generateAnalysis":
-            #     state["nextNode"]=node
-            # else:
-            #     print("end or invalid output")
-            #     state["nextNode"]="end"
             
             return state
         except Exception as e:
@@ -464,7 +525,7 @@ class StateMethods:
         try:
             state["llm"]=StateMethods.getModel()
             state["prompt"]=StateMethods.getPrompt()
-            state["tools"]=StateMethods.getTools()
+            # state["tools"]=StateMethods.getTools()
 
             print(f"""\nState initialized with:\n
                 llm: {type(state["llm"])}\n
@@ -481,7 +542,7 @@ class StateMethods:
             graph_builder = StateGraph(State)
 
             graph_builder.add_node("writeQuery", StateMethods.writeQuery)
-            graph_builder.add_node("executeQuery", StateMethods.executeQuery)
+            graph_builder.add_node("executeQuery", StateMethods.validateQuery)
             graph_builder.add_node("improveQuery", StateMethods.improveQuery)
             graph_builder.add_node("generateDF", StateMethods.generateDF)
             graph_builder.add_node("chooseVisualization", StateMethods.chooseVisualization)

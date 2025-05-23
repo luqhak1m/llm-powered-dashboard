@@ -8,6 +8,11 @@ from dotenv import load_dotenv
 import jwt
 import datetime
 
+import json
+
+from module.state import state
+from module.tools import Tool
+
 auth_bp=Blueprint('auth', __name__)
 
 load_dotenv()
@@ -31,6 +36,17 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             tools TEXT,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS saved_visuals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            visualization TEXT,
+            analysis TEXT,
+            prompt TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     ''')
@@ -103,6 +119,21 @@ def login():
         }
         token=jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
+        conn = sqlite3.connect("users.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT tools FROM user_tools WHERE user_id = ?", (user[0],))
+        row = cursor.fetchone()
+        conn.close()
+
+        selected_tool_names = json.loads(row[0]) if row else []
+        original_tools = Tool().tools
+        filtered_tools = [tool for tool in original_tools if tool.name in selected_tool_names]
+        state["tools"] = filtered_tools
+
+        print(f"""\nState updated with: \n
+            tools: {type(state['tools'])} {len(state['tools'])}
+            """)
+
         return jsonify({
             "message": "Login Successful",
             "token": token
@@ -131,6 +162,25 @@ def register():
             (username, email, password)
         )
         conn.commit()
+
+        user_id = cursor.lastrowid
+        tools_json = json.dumps(Tool().get_tool_names())
+        print(f"tools_json: {tools_json}")
+
+        cursor.execute(
+            "INSERT INTO user_tools (user_id, tools) VALUES (?, ?)",
+            (user_id, tools_json)
+        )
+
+        conn.commit()
+
+        tools=Tool()
+        tools_list=tools.tools
+        state["tools"] = tools_list
+
+        print(f"""\nState updated with: \n
+            tools: {type(state['tools'])} {len(state['tools'])}
+            """)
 
     except sqlite3.IntegrityError:
         return jsonify(

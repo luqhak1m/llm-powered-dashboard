@@ -7,6 +7,9 @@ import LocalDB from './Data-Source'
 import DatabaseChoices from './Database-Choices'
 import DataPreview from './Data-Preview'
 import Query from './Query'
+import SavedVisualList from './Saved-Visualization'
+import SavedVisualDetail from './Saved-Visualization-Details'
+
 
 function Layout() {
     return (
@@ -20,6 +23,8 @@ function Layout() {
           <Route path="/db-choices" element={<DatabaseChoices />} />
           <Route path="/db-preview" element={<DataPreview />} />
           <Route path="/query" element={<Query />} />
+          <Route path="/saved-visual" element={<SavedVisualList />} />
+          <Route path="/saved-visual/:id" element={<SavedVisualDetail />} />
         </Routes>
       </Router>
     )

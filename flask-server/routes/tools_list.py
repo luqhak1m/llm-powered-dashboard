@@ -5,6 +5,8 @@ import jwt
 import os
 from dotenv import load_dotenv
 from module.tools import Tool
+from module.state import state
+
 
 tools_bp = Blueprint('tools', __name__)
 load_dotenv()
@@ -20,9 +22,9 @@ def get_tools():
 def save_tools():
     data = request.get_json()
     token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    tools = data.get("tools")
+    selected_tools = data.get("tools")
 
-    if not tools or not isinstance(tools, list):
+    if not selected_tools or not isinstance(selected_tools, list):
         return jsonify({"error": "Invalid tools list"}), 400
 
     try:
@@ -40,18 +42,38 @@ def save_tools():
     if existing:
         cursor.execute(
             "UPDATE user_tools SET tools = ? WHERE user_id = ?",
-            (json.dumps(tools), user_id)
+            (json.dumps(selected_tools), user_id)
         )
     else:
         cursor.execute(
             "INSERT INTO user_tools (user_id, tools) VALUES (?, ?)",
-            (user_id, json.dumps(tools))
+            (user_id, json.dumps(selected_tools))
         )
 
     conn.commit()
     conn.close()
-    return jsonify({"message": "Tools saved successfully"}), 200
 
+    original_tools = Tool().tools
+    filtered_tools = [tool for tool in original_tools if tool.name in selected_tools]
+
+    state["tools"]=filtered_tools
+    print(f"""\nState updated with: \n
+        tools: {type(state['tools'])} {len(state['tools'])}
+        """)
+
+    print({
+        "message": "Tools saved successfully",
+        "tools": original_tools,
+        "filtered_tools": filtered_tools,
+        "filtered_tools_type": type(filtered_tools).__name__,
+        "length": len(filtered_tools),
+    })
+
+    return jsonify(
+        {
+            "message": "Tools saved successfully",
+        }
+    )
 
 @tools_bp.route("/get-selected-tools", methods=["GET"])
 def get_selected_tools():
@@ -69,5 +91,6 @@ def get_selected_tools():
     row = cursor.fetchone()
     conn.close()
 
-    tools = json.loads(row[0]) if row else []
-    return jsonify({"tools": tools})
+    selected_tools = json.loads(row[0]) if row else []
+
+    return jsonify({"tools": selected_tools})

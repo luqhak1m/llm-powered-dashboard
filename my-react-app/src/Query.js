@@ -15,7 +15,6 @@ import ToolSelector from './Query-Tools'
 const Query=()=>{
     const [inputText, setInputText]=useState("")
     const [sidebarOpen, setSidebarOpen]=useState(false)
-    const [dbStatus, setStatus]=useState(false)
     const [visualization, setVisual]=useState(false)
     const [analysis, setAnalysis]=useState(false)
     const [analysisText, setAnalysisText]=useState("")
@@ -45,6 +44,7 @@ const Query=()=>{
         setVisual(false)
         setAnalysis(false)
 
+        let dbConnection=false;
         try{
             
             const dbStatus=await fetch("http://127.0.0.1:5001/data-source/db-status", {
@@ -53,11 +53,11 @@ const Query=()=>{
                 .then(res=>res.json())
                 .then(data=>{
                     if(data.status==="connected"){
-                        setStatus(true) // db status
+                        dbConnection=true // db status
                         console.log("db found")
 
                     }else {
-                        setStatus(false);
+                        dbConnection=false;
                         alert(`You are NOT connected to a database. Please make a connection to your database`)
                         return
                     }
@@ -68,9 +68,9 @@ const Query=()=>{
             alert(err)
         }
 
-        console.log(dbStatus);
+        console.log(dbConnection);
 
-        if(dbStatus===true){
+        if(dbConnection===true){
             try {
                 const response = await fetch("http://127.0.0.1:5001/query/query-input", {
                     method: "POST",
@@ -271,6 +271,28 @@ const Query=()=>{
                                 <ReactMarkdown>{analysisText}</ReactMarkdown>
                         
                                 </div>
+
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const token = localStorage.getItem("token")
+                                            const res = await fetch("http://127.0.0.1:5001/query/save-visual", {
+                                                method: "POST",
+                                                headers: {
+                                                    Authorization: `Bearer ${token}`,
+                                                    "Content-Type": "application/json"
+                                                }
+                                            })
+                                            const data = await res.json()
+                                            alert(data.message)
+                                        } catch (err) {
+                                            console.error("Failed to save:", err)
+                                            alert("Error saving visual and analysis")
+                                        }
+                                    }}
+                                >
+                                    Save Visual and Analysis
+                                </button>
                         
                         
                             </div>
@@ -280,23 +302,6 @@ const Query=()=>{
                 )}
 
                 <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                    <h2>Sidebar</h2>
-                    <p>Extra tools or settings</p>
-
-                    <h2>Execution Flow Graph</h2>
-                            <img
-                                src="http://127.0.0.1:5001/query/generated-graph"
-                                alt="Agents Workflow"
-                                style={{
-                                    width: '100%',
-                                    maxHeight: '500px',
-                                    objectFit: 'contain',
-                                    marginTop: '20px',
-                                    border: '1px solid #ccc',
-                                    borderRadius: '8px'
-                                }}
-                            />
-
                     <div className='side-btn-div'>
                         <button onClick={getToolSelector} className='side-btn-open' id='select-graph-btn'>Select Graphs/Charts</button>
                         <button onClick={getDBAttr} className='side-btn-open' id='db-details-btn'>View Database Details</button>

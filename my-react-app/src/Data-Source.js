@@ -106,7 +106,7 @@ const LocalDB = () => {
                 placeholder="Password"
                 value={password}
                 onChange={handleChange(setPassword)}
-                required />
+                 />
             </div>
 
             <div className="row button">

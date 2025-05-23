@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 from sqlalchemy import create_engine, text, inspect, func, select
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from urllib.parse import quote_plus
-from module.state import State, state
+from module.state import state
 from module.systemFunction import log_message
 from langchain_community.utilities import SQLDatabase
 

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-function ToolSelector({ token, onClose }) {
+function ToolSelector({ token: propToken, onClose }) {
+	const token = propToken || localStorage.getItem("token")
 	const [tools, setTools] = useState([])
 	const [selected, setSelected] = useState([])
 
@@ -67,6 +68,8 @@ function ToolSelector({ token, onClose }) {
 								checked={selected.includes(tool)}
 								onChange={() => toggleTool(tool)}
 							/>
+							<img src={`images/${tool}.jpg`} alt={tool} style={{ width: '24px', height: '24px' }} />
+
 							{tool}
 						</label>
 					</li>

@@ -30,20 +30,12 @@ const DatabaseChoices=()=>{
 
                 <div id="options">
 
-                <button onClick={() => navigate("/connect-cloud")}>
-                    <img className='btn-icon' src='images/cloud-btn.png' /> Connect via Cloud Service
-                </button>
-
-                <button onClick={() => navigate("/connect-ssh")}>
-                    <img className='btn-icon' src='images/ssh-btn.png' /> Connect via SSH Tunnel
-                </button>
-
                 <button onClick={() => navigate("/local-db")}>
-                    <img className='btn-icon' src='images/local-db-btn.png'/> Connect to Local Database
+                    <img className='btn-icon' src='images/database-btn.webp'/> Connect to Local Database
                 </button>
 
                 <button onClick={() => navigate("/connect-sample")}>
-                    <img className='btn-icon' src='images/sample-db-btn.png' /> Connect to Sample Database
+                    <img className='btn-icon' src='images/laptop-btn.png' /> Connect to Sample Database
                 </button>
 
                 </div>
