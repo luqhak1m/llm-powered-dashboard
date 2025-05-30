@@ -1,6 +1,7 @@
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import inspect
 from langchain_core.messages import HumanMessage, AIMessage
@@ -16,7 +17,9 @@ class Tool:
             self.scatterPlot, 
             self.barChart,
             self.choropleth,
-            self.pieChart
+            self.pieChart,
+            self.heatMap,
+            self.table,
         ]
     
     @tool
@@ -91,13 +94,68 @@ class Tool:
         title: Annotated[str, "the title of the chart"],
     ):
         """ Generate a pie chart"""
-        df=pd.DataFrame(data)
-        return px.pie(
-            data_frame=df,
-            names=names,
-            values=values,
-            title=title
-        )
+        try:
+            print("converting to df...")
+            df=pd.DataFrame(data)
+            return px.pie(
+                data_frame=df,
+                names=names,
+                values=values,
+                title=title
+            )
+        except Exception as e:
+            print(f"converting to df failed: {e}")
+            return e
+    
+    @tool
+    def heatMap(
+        data: Annotated[dict, "the dictionary containing the value to be plotted"], 
+        x: Annotated[str, "the name of the x axis"], 
+        y: Annotated[str, "the name of the y axis"],
+        color: Annotated[str, "the key from the dictionary which contains the numeric value. the key capitalization must match exactly from the dictionary."],
+        title: Annotated[str, "the title of the graph"],
+    ):
+        """ Generate a heatmap """
+        try:
+            print("converting to df...")
+            df = pd.DataFrame(data)
+
+            heatmap_data = df.pivot(index=y, columns=x, values=color)
+
+            fig = px.imshow(
+                heatmap_data,
+                color_continuous_scale="plasma",
+                text_auto=True,
+                title=title
+            )
+            return fig
+
+        except Exception as e:
+            print(f"heatmap failed: {e}")
+            return e
+        
+    @tool
+    def table(
+        data: Annotated[dict, "the dictionary containing the value to be plotted"], 
+        title: Annotated[str, "the title of the graph"],
+    ):
+        """Generate a table"""
+        try:
+            print("converting to df...")
+            df = pd.DataFrame(data)
+
+            fig = go.Figure(data=[go.Table(
+                header=dict(values=list(df.columns), fill_color='paleturquoise', align='left'),
+                cells=dict(values=[df[col] for col in df.columns], fill_color='lavender', align='left')
+            )])
+            fig.update_layout(title=title)
+            return fig
+
+        except Exception as e:
+            print(f"converting to df failed: {e}")
+            return e
     
     def get_tool_names(self):
         return [tool.name for tool in self.tools]
+
+

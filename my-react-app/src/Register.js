@@ -33,7 +33,7 @@ const Register = () => {
             const data=await response.json()
             if(response.ok){
                 localStorage.setItem("token", data.token)
-                navigate("/mainmenu")
+                navigate("/mainmenu", { state: { token: data.token } })            
             } else {
                 alert(`Registration failed: ${data.error}`)
             }

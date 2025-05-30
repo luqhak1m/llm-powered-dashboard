@@ -38,22 +38,6 @@ def ValidateConnection():
         return
     
     try:
-        # state["schema"] = []
-        
-        for table in state["db"].get_usable_table_names():
-            schema = state["db"].run(f"SHOW CREATE TABLE {table};")
-            state["schema"].append(schema)
-
-        log_message(f"Schema retrieval successful")
-        print(f"""\nState updated with: \n
-                schema: {type(state['schema'])} {len(state['schema'])}
-        """)
-    except Exception as e:
-        print(f"error {e}")
-        log_message(f"Error getting database schema: {e}")
-        return
-        
-    try:
         engine = create_engine(db_uri)
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
@@ -61,7 +45,32 @@ def ValidateConnection():
         connection_status["status"]=True
         connection_status["database_name"]=database
         connection_status["engine"]=engine
+        print(f"engine: {type(engine)}")
+
+        # Get table names
+        print("getting table names...")
+        inspector = inspect(engine)
+        table_names = inspector.get_table_names()
+
+        # Extract DDLs
+        print("getting table DDLs...")
+        for table in table_names:
+            with engine.connect() as conn:
+                result = list(conn.execute(text(f"SHOW CREATE TABLE `{table}`")))
+                if result:
+                    ddl = result[0][1]
+                    state["schema"].append(ddl)
+
+        log_message(f"Schema retrieval successful")
+        print(f"""\nState updated with: \n
+                schema: {type(state['schema'])} {len(state['schema'])} {state["schema"]}
+        """)
+    except Exception as e:
+        print(f"error {e}")
+        log_message(f"Error getting database schema: {e}")
+        return
         
+    try:
         return jsonify({"message": "Connection successful"}), 200
     except OperationalError as e:
         return jsonify({"error": "Connection failed", "details": str(e)}), 500

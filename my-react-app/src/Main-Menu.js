@@ -33,7 +33,7 @@ const MainMenu = () => {
                     <button onClick={()=>navigate("/query")}> <img className='btn-icon' src='images/graph-btn.webp' /> Generate Visual and Analysis </button>
                     <button onClick={()=>navigate("/db-preview")}> <img className='btn-icon' src='images/database-btn.webp' /> Data Source </button>
                     <button onClick={()=>navigate("/saved-visual")}> <img className='btn-icon' src='images/folder-btn.png' /> Saved Visual and Analysis </button>
-                    <button> <img className='btn-icon' src='images/settings-btn.png' /> Settings </button>
+                    {/* <button> <img className='btn-icon' src='images/settings-btn.png' /> Settings </button> */}
                     <button id='logout-btn' onClick={handleLogout}> <img className='btn-icon' src='images/logout-btn.webp' /> Log Out </button>
 
                 </div>

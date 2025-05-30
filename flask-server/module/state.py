@@ -22,6 +22,7 @@ class State(TypedDict):
 
     db: object = None
     llm: object = None
+    model: str=""
     schema: List[str] = []
     prompt: object = None
     question: str = ""
@@ -128,6 +129,7 @@ class StateMethods:
                      
     def improveQuery(state: State):
         print("\nStarting Node improveQuery()\n")
+        state["improvement"]=""
 
         print(f"try number {state['retry']}")
         if state["retry"]<=3:
@@ -333,7 +335,7 @@ class StateMethods:
             print(f"error {e}")
             return
 
-    def agentOutputValidator(state: State):
+    def dfValidator(state: State):
         '''
         Verify the output of agents routing them to the necessary agent to reproduce the output
         '''
@@ -344,61 +346,26 @@ class StateMethods:
 
         <|begin_of_text|>
         <|start_header_id|>system<|end_header_id|>
-        you are the router.
-        you must analyze the prompt of {state["question"]} and the input from four different agent.
-        your responsibility is to determine the next agent to go to. 
-        given the current state of the input, determine the agent responsible for the next step.
-        the next agent must follow the order of:
 
-        1. generateDF
-        2. chooseVisualization
-        3. generateAnalysis
-        4. end
+        you are an agent output validator.
+        you must verify the string and make sure the output of an agent must be in form of a dictionary. 
+        verify whether the output is in the form of a dictionary, if yes, move to the next agent, chooseVisualization. if the output is not in the form of dictionary, or if the output contains anything other than a dictionary, go back to the same agent with an improvement message.
+        your output must be in format of dictionary with the agent name and the improvement message. there are only 2 agents:
 
-        if the input of an agent is empty or None, it indicates that the agent has not been reached yet.
-        analyze the input. if the input is not good enough to continue to the next agent and the input needs a rework, go to the agent responsible for the input using this form of dictionary: 
+        generateDF
+        chooseVisualization
 
-        {{ 
-
-        "agentName": "<agentName>",
-        "improvementMessage": "<improvementMessage>"
-
-        }}
-
-        if no improvements are needed and can move to the next agent. DO NOT go to the previous agent if there is no improvement message, only move to the next agent keep the improvement message empty:
+        you must output in the format of dictionary:
         
         {{ 
 
-        "agentName": "<agentName>",
-        "improvementMessage": ""
+            "agentName": "<agentName>",
+            "improvementMessage": "<improvementMessage>"
 
         }}
 
-        input:
+        verify this agent output: {state["data"]}
 
-        1. generateDF = {state["data"]}
-        2. chooseVisualization = {state["visualization"]}
-        3. generateAnalysis = {state["analysis"]}
-
-        your response will be converted directly into a dictionary, hence it must only be in form of a dictionary only. 
-        no other comment or response is needed besides the dictionary. 
-        the dictionary and dictionary only:
-
-        {{ 
-
-        "agentName": "<agentName>",
-        "improvementMessage": "<improvementMessage>"
-
-        }}
-
-        If all the input are validated and all are good to go, reply with this dict:
-
-        {{ 
-
-        "agentName": "end",
-        "improvementMessage": ""
-
-        }}
         <|eot_id|>
 
         <|start_header_id|>assistant<|end_header_id|>
@@ -527,8 +494,14 @@ class StateMethods:
             state["prompt"]=StateMethods.getPrompt()
             # state["tools"]=StateMethods.getTools()
 
+            # print(f"type: {type(llm)}")
+            # print(f"model_name: {(llm.model_name)}")
+            # print(f"type(model_name): {type(llm.model_name)}")
+            state["model"]=state["llm"].model_name
+
             print(f"""\nState initialized with:\n
                 llm: {type(state["llm"])}\n
+                model: {(state["model"])}\n
                 prompt: {type(state["prompt"])}\n
                 tools: {type(state["tools"])} {len(state["tools"])}\n
             """)
@@ -547,13 +520,13 @@ class StateMethods:
             graph_builder.add_node("generateDF", StateMethods.generateDF)
             graph_builder.add_node("chooseVisualization", StateMethods.chooseVisualization)
             graph_builder.add_node("generateAnalysis", StateMethods.generateAnalysis)
-            graph_builder.add_node("agentOutputValidator", StateMethods.agentOutputValidator)
+            graph_builder.add_node("dfValidator", StateMethods.dfValidator)
 
             graph_builder.add_edge(START, "writeQuery")
             graph_builder.add_edge("writeQuery", "executeQuery")
 
             graph_builder.add_conditional_edges("executeQuery", lambda state: state['SQLValidity'], {
-                "valid": "agentOutputValidator",
+                "valid": "generateDF",
                 "invalid": "improveQuery",
                 "end": END
             })
@@ -565,25 +538,22 @@ class StateMethods:
                 "max attempt": END
             })
 
-            graph_builder.add_edge("generateDF", "agentOutputValidator")
-            graph_builder.add_edge("chooseVisualization", "agentOutputValidator")
-            graph_builder.add_edge("generateAnalysis", "agentOutputValidator")
+            graph_builder.add_edge("generateDF", "dfValidator")
+            
 
             graph_builder.add_conditional_edges(
-            "agentOutputValidator",
+            "dfValidator",
             lambda state: 
                 "generateDF" if state["nextNode"] == "generateDF"
-                else "chooseVisualization" if state["nextNode"] == "chooseVisualization" 
-                else "generateAnalysis" if state["nextNode"] == "generateAnalysis"
-                else "end",  
+                else "chooseVisualization",
                 {
                 "generateDF": "generateDF",
                 "chooseVisualization": "chooseVisualization",
-                "generateAnalysis": "generateAnalysis",
-                "end": END,
-
                 }
             )
+
+            graph_builder.add_edge("chooseVisualization", "generateAnalysis")
+            graph_builder.add_edge("generateAnalysis", END)
 
             graph = graph_builder.compile()
             print(f"graph initialized: {type(graph)}")

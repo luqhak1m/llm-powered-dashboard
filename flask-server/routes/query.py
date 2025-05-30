@@ -19,6 +19,9 @@ def setQuery():
     The processes from getting the input to generating the visualziation
     '''
 
+    global final_state
+
+
     try:
 
         data=request.get_json()
@@ -48,17 +51,25 @@ def setQuery():
 
 @query_bp.route("/state-details", methods=["GET"])
 def getStateDetails():
+
+    global final_state
+
     try:
-        return jsonify(
-            {
-                "question": state["question"],
-                "query": state["query"],
-                "result": state["result"],
-                "data": state["data"],
-                "analysis": state["analysis"],
-                "visualization": str(state["visualization"]) if state["visualization"] is not None else None,""
-                "routerCount": state["routerCount"],
+        toBeSent={
+                "question": final_state["question"],
+                "query": final_state["query"],
+                "result": final_state["result"],
+                "data": final_state["data"],
+                "analysis": final_state["analysis"],
+                "visualization": str(final_state["visualization"]) if final_state["visualization"] is not None else None,
+                "routerCount": final_state["routerCount"],
+                "retry": final_state["retry"],
+                "SQLValidity": final_state["SQLValidity"]
             }
+        
+        print(f"tobesent: {toBeSent}")
+        return jsonify(
+            toBeSent
         )
     except Exception as e:
         return jsonify(
@@ -72,10 +83,7 @@ def getLLMDetails():
     try:
         return jsonify(
             {
-                "llm": str(state["llm"]),
-                "prompt": str(state["prompt"]),
-                "tools": str(state["tools"]),
-                
+                "model": str(state["model"]),                
             }
         )
     except Exception as e:

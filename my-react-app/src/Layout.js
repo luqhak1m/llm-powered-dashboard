@@ -9,6 +9,8 @@ import DataPreview from './Data-Preview'
 import Query from './Query'
 import SavedVisualList from './Saved-Visualization'
 import SavedVisualDetail from './Saved-Visualization-Details'
+import VisualOutput from './Output'
+import StateOutput from './Query-Output'
 
 
 function Layout() {
@@ -25,6 +27,8 @@ function Layout() {
           <Route path="/query" element={<Query />} />
           <Route path="/saved-visual" element={<SavedVisualList />} />
           <Route path="/saved-visual/:id" element={<SavedVisualDetail />} />
+          <Route path="/visual-output" element={<VisualOutput />} />
+          <Route path="/state-output" element={<StateOutput />} />
         </Routes>
       </Router>
     )

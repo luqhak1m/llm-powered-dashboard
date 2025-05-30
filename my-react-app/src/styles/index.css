@@ -127,7 +127,7 @@ form .row input::placeholder {
 }
 
 form .button input:hover {
-  background: #090909;
+  background: #808080;
 }
 
 .wrapper form .signup-link {
