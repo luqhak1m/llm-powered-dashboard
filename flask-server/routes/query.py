@@ -32,8 +32,16 @@ def setQuery():
         print(f"state.question set! {type(state['question'])}")
 
         final_state = graph.invoke(state)
+
         state["visualization"] = final_state.get("visualization")
+        if not state["visualization"]:
+            return jsonify(
+                {
+                    "error": f"Graph production fails, please try another prompt."                
+                }
+            ), 400        
         state["analysis"] = final_state.get("analysis")
+
         print(final_state)
 
         return jsonify(
@@ -43,11 +51,27 @@ def setQuery():
         ), 200
     
     except Exception as e:
-        return jsonify(
-            {
-                "error": f"{e}"
-            }
-        ), 400
+
+        print(f"in setQuery's exception")
+
+        if len(state['error'])>0:
+            print(f"Found {len(state['error'])} error(s) within final state!")
+
+            for error in state["error"]:
+                print("\n--------start of an error--------\n")
+                print(f"state[error]: {error}")
+                print("\n--------end of an error--------\n")
+
+            return jsonify({
+                "status": "failed",
+                "error": state["error"]
+            }), 400
+        else:
+            return jsonify(
+                {
+                    "error": f"{e}"
+                }
+            ), 400
 
 @query_bp.route("/state-details", methods=["GET"])
 def getStateDetails():
@@ -112,12 +136,26 @@ def getDBDetails():
 @query_bp.route("/generated-visual")
 def getVisual():
     print("Returning visualization:", state["visualization"])
-    return state["visualization"], 200, {"Content-Type": "text/html"}
+    try:
+        return state["visualization"], 200, {"Content-Type": "text/html"}
+    except:  
+        return jsonify(
+            {
+                "error": f"Graph production fails, please try another prompt."                
+            }
+        ), 400  
 
 @query_bp.route("/generated-analysis")
 def getAnalysis():
     print("Returning analysis:", (state["analysis"]))
-    return state["analysis"], 200,
+    try:
+        return state["analysis"], 200,
+    except:
+        return jsonify(
+            {
+                "error": f"Analysis production fails, please try another prompt."                
+            }
+        ), 400  
 
 @query_bp.route("/generated-graph")
 def get_graph():
@@ -150,7 +188,6 @@ def save_visual():
     conn.close()
 
     return jsonify({"message": "Saved successfully"}), 200
-
 
 @query_bp.route("/saved-visuals", methods=["GET"])
 def get_saved_visuals():

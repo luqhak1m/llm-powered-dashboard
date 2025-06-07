@@ -73,16 +73,27 @@ const Query=()=>{
                     },
                     body: JSON.stringify({ question: inputText })
                 })
-            
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-            
+    
+                
                 const data = await response.json()
+
+
+                if (!response.ok){
+                    if (data.error && Array.isArray(data.error)) {
+                        alert("Errors:\n" + data.error.join("\n"));
+                    } else if (typeof data.error === "string") {
+                        alert("Error:\n" + data.error);
+                    } else {
+                        alert(`Unknown error occurred (HTTP ${response.status})`);
+                    }
+                    return;
+                }
+
+
                 if (data.status === "success"){
                     console.log("backend (/query-input) return success")
                     navigate("/visual-output")
-                }
-                    
-                else throw new Error("Backend responded with failure status")
+                }else throw new Error("Backend responded with failure status")
             } catch (err) {
                 console.error("Error submitting query:", err)
                 alert(err.message)

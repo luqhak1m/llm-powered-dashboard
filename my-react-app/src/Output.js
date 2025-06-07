@@ -116,7 +116,17 @@ const VisualOutput = () => {
 
                 <h2>Analysis</h2>
                 <div className="analysis-box">
-                <ReactMarkdown>{analysisText}</ReactMarkdown>
+                <pre style={{
+                        background: '#f9f9f9',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        fontFamily: 'monospace',
+                        fontSize: '14px'
+                        }}>
+                        {analysisText || "N/A"}
+                    </pre>
                 </div>
 
 

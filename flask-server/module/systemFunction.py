@@ -1,10 +1,9 @@
 import logging
 
-# Configure logging
 logging.basicConfig(
-    filename='app.log',  # Logs will be stored in 'app.log'
-    level=logging.INFO,   # Set logging level
-    format='%(asctime)s - %(levelname)s - %(message)s'  # Log format
+    filename='app.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
 def log_message(message):

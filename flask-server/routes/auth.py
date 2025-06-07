@@ -111,6 +111,7 @@ def login():
     conn.close()
 
     if user:
+        print("GETTING TOOLS FROM auth.py")
         payload={
             "id": user[0],
             "username": user[1],

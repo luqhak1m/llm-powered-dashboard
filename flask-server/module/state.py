@@ -37,6 +37,7 @@ class State(TypedDict):
     nextNode: str=""
     routerCount: int=0
     improvement: str=""
+    error: list=[]
 
 
 class StateMethods:
@@ -65,9 +66,6 @@ class StateMethods:
         )
         try:
             print("Writing Query")
-            # print(f"state[prompt]: {state['prompt']}")
-            # print(f"type state[prompt]: {type(state['prompt'])}")
-            # print(f"type prompt{type(prompt)}")
             structured_llm = state["llm"].with_structured_output(QueryOutput)
             result = structured_llm.invoke(prompt)
             state["query"]=result["query"]
@@ -76,8 +74,11 @@ class StateMethods:
 
             return state
         except Exception as e:
+            state["error"].append(f"writeQuery failed: {str(e)}")
+            for error in state["error"]:
+                print(error)
             print(e)
-            return
+            return state
     
     def validateQuery(state: State):
         """Execute SQL query and verify the query generated."""
@@ -92,6 +93,8 @@ class StateMethods:
             print(type(state["result"]))
         except Exception as e:
             print(f"ERROR! {e}")
+            state["error"].append(f"validateQuery execution failed: {str(e)}")
+            return state
         
         prompt = f"""
         <|begin_of_text|>
@@ -124,8 +127,8 @@ class StateMethods:
             return state
         except Exception as e:
             print(f"ERROR! {e}")
-
-        return state
+            state["error"].apend(f"validateQuery validation failed: {str(e)}")
+            return state
                      
     def improveQuery(state: State):
         print("\nStarting Node improveQuery()\n")
@@ -162,10 +165,12 @@ class StateMethods:
                 return state
             except Exception as e:
                 print(f"error: {e}")
-                return
+                state["error"].append(f"improveQuery failed: {str(e)}")
+                return state
         else:
             print("max retry reached")
-            return
+            state["error"].append("improveQuery failed: max retry reached")
+            return state
           
     def generateDF(state: State):
         """Generate dictionary based on the data provided and user prompt."""
@@ -213,77 +218,81 @@ class StateMethods:
             return state
         except Exception as e:
             print(f"error: {e}")
-            return f"error {e}"
+            state["error"].append(f"generateDF failed: {str(e)}")
+            return state
     
     def chooseVisualization(state: State):
             
-            print("\nStarting Node chooseVisualization()\n")
+        print("\nStarting Node chooseVisualization()\n")
 
 
-            prompt=f"""
+        prompt=f"""
 
-            <|begin_of_text|>
-            <|start_header_id|>system<|end_header_id|>
-            Environment: ipython
-            You are a data visualization expert.
-            You are given several tools that correspond to different types of data visualization graphs and charts.
-            Given the following user questions, the data, and the tools, choose the best tool to represent the data.
+        <|begin_of_text|>
+        <|start_header_id|>system<|end_header_id|>
+        Environment: ipython
+        You are a data visualization expert.
+        You are given several tools that correspond to different types of data visualization graphs and charts.
+        Given the following user questions, the data, and the tools, choose the best tool to represent the data.
 
-            Question: {state["question"]}
-            Data: {state["data"]}
-            Tools: {state["tools"]}
+        Question: {state["question"]}
+        Data: {state["data"]}
+        Tools: {state["tools"]}
 
-            Take into account the existing visualization and the required improvement. Ignore if empty:
-            
-            Existing Visualization: {state["visualization"]}
-            Required Improvement: {state["improvement"]}
-            <|eot_id|>
+        Take into account the existing visualization and the required improvement. Ignore if empty:
+        
+        Existing Visualization: {state["visualization"]}
+        Required Improvement: {state["improvement"]}
+        <|eot_id|>
 
-            <|start_header_id|>assistant<|end_header_id|>
-            
-            """
+        <|start_header_id|>assistant<|end_header_id|>
+        
+        """
 
-            llm_with_tools=state["llm"].bind_tools(state["tools"])
-            # chain = llm_with_tools | human_approval
-            print("tools " + str(state["tools"]))
-            
-            try:
+        llm_with_tools=state["llm"].bind_tools(state["tools"])
+        # chain = llm_with_tools | human_approval
+        print("tools " + str(state["tools"]))
+        
+        try:
 
-                # Step 1: Invoke LLM to get the function call
-                response = llm_with_tools.invoke(prompt)
+            # Step 1: Invoke LLM to get the function call
+            response = llm_with_tools.invoke(prompt)
 
-                # Step 2: Extract tool calls from AIMessage
-                tool_calls = response.additional_kwargs.get("tool_calls", [])
-                if not tool_calls:
-                    raise ValueError("No tool call returned by the LLM.")
+            # Step 2: Extract tool calls from AIMessage
+            tool_calls = response.additional_kwargs.get("tool_calls", [])
+            if not tool_calls:
+                state["error"].append(f"chooseVisualization failed: {str(e)}")
+                return state
+                # raise ValueError("No tool call returned by the LLM.")
 
-                function_call = tool_calls[0]  # Assuming a single function call
-                function_name = function_call["function"]["name"]
-                function_args = json.loads(function_call["function"]["arguments"])  # Convert string to dict
+            function_call = tool_calls[0]  # Assuming a single function call
+            function_name = function_call["function"]["name"]
+            function_args = json.loads(function_call["function"]["arguments"])  # Convert string to dict
 
-                # Step 3: Execute tool dynamically using LangChain's `.invoke()`
-                tool_mapping = {tool.name: tool for tool in state["tools"]}  # Map tool names
+            # Step 3: Execute tool dynamically using LangChain's `.invoke()`
+            tool_mapping = {tool.name: tool for tool in state["tools"]}  # Map tool names
 
-                if function_name in tool_mapping:
-                    print(function_name)
-                    print(function_args)
-                    visualization_result = tool_mapping[function_name].invoke(input=function_args)
-                    # self.visualization = visualization_result
-                    print(type(visualization_result))
-                    print(f"chart function: {visualization_result}")
+            if function_name in tool_mapping:
+                print(function_name)
+                print(function_args)
+                visualization_result = tool_mapping[function_name].invoke(input=function_args)
+                # self.visualization = visualization_result
+                print(type(visualization_result))
+                print(f"chart function: {visualization_result}")
 
-                    #fig = self.visualization
-                    # fig.write_html("visual.html")
-                    state["visualization"] = visualization_result.to_html(full_html=False, include_plotlyjs='cdn')
-                    print(type(state["visualization"]))
+                #fig = self.visualization
+                # fig.write_html("visual.html")
+                state["visualization"] = visualization_result.to_html(full_html=False, include_plotlyjs='cdn')
+                print(type(state["visualization"]))
 
-                    return state
-                else:
-                    raise ValueError(f"Unknown function: {function_name}")
+                return state
+            else:
+                raise ValueError(f"Unknown function: {function_name}")
 
-            except Exception as e:
-                print(e)
-                return
+        except Exception as e:
+            print(e)
+            state["error"].append(f"chooseVisualization failed: {str(e)}")
+            return state
 
     def generateAnalysis(state: State):
         """Answer question using retrieved information as context."""
@@ -301,15 +310,15 @@ class StateMethods:
                   
             Format it like this example:
                   
-            Data Preview
+            Data Preview:
                   
             <text of data preview>
                   
-            Trend
+            Trend: 
                   
             <text of trend>
                   
-            Main Outcome
+            Main Outcome: 
                   
             <text of main outcome>
                   
@@ -329,11 +338,15 @@ class StateMethods:
             print("Generating Analysis")
             state["analysis"] = state["llm"].invoke(prompt).content
             print(type(state["analysis"]))
-
-            return state
+            try:
+                print(f"done generate analysis: {type(state)}, returning state")
+                return state
+            except:
+                print("error return")
         except Exception as e:
             print(f"error {e}")
-            return
+            state["error"].append(f"generateAnalysis failed: {str(e)}")
+            return state
 
     def dfValidator(state: State):
         '''
@@ -374,9 +387,11 @@ class StateMethods:
         
         print(f"count {state['routerCount']}")
 
-        if state["routerCount"]==5:
+        if state["routerCount"] == 5:
             print("max router attempt")
-            return
+            state["error"].append("dfValidator failed: max routing attempt reached")
+            return state
+
 
         try:     
             state["routerCount"]+=1
@@ -398,7 +413,8 @@ class StateMethods:
             return state
         except Exception as e:
             print(f"error: {e}")
-            return
+            state["error"].append(f"dfValidator failed: {str(e)}")
+            return state
 
     def getModel():
         load_dotenv()
@@ -482,6 +498,7 @@ class StateMethods:
             "visualization": None,
             "nextNode": "",
             "routerCount": 0,
+            "error": [],
         }
 
         print(f"\nState created: {type(state)}")
