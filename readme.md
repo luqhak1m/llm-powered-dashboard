@@ -37,7 +37,7 @@ Hello and welcome aboard! This project presents an automated data visualization 
 - npm install
 - npm start
 
-# How what do i need to visualize my data?
+# How to visualize my data?
 
 ### Step 1: Login
 
