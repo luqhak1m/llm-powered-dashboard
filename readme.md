@@ -1,6 +1,6 @@
 # What is this?
 
-Hello and welcome aboard! This project is an automated data visualiozation tool using multi agent framework. Just give a prompt and it will visualize your data. It's that simple
+Hello and welcome aboard! This project presents an automated data visualization tool using multi agent framework. Submit a prompt and it will visualize your data. It's that simple!
 
 # How to run?
 
@@ -17,7 +17,7 @@ Hello and welcome aboard! This project is an automated data visualiozation tool 
 
 ### Running the App:
 
-## Step 1 - Run the Flask Backend
+## Step 1: Run the Flask Backend
 
 - cd flask-server
 - python -m venv venv
@@ -31,7 +31,7 @@ Hello and welcome aboard! This project is an automated data visualiozation tool 
 - pip install -r requirements.txt
 - python server.py
 
-## Step 2 - Run the React Frontend
+## Step 2: Run the React Frontend
 
 - cd my-react-app
 - npm install
