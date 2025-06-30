@@ -51,7 +51,7 @@ Hello and welcome aboard! This project presents an automated data visualization 
 
 ### Step 3: Navigate to the prompt field page
 
-- Navigate back to the main menu and go to Generate Visual and Analysis
+- Navigate back to the main menu and go to Generate Visual and Analysis page.
 
 ### Step 4: Choose your visual
 
