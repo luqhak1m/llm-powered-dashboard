@@ -10,7 +10,8 @@ import datetime
 
 import json
 
-from module.state import state
+from module.state import state, StateMethods
+from routes.data_source import connection_status
 from module.tools import Tool
 
 auth_bp=Blueprint('auth', __name__)
@@ -120,6 +121,8 @@ def login():
         }
         token=jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
+        StateMethods.setupInitialState(state)
+
         conn = sqlite3.connect("users.db")
         cursor = conn.cursor()
         cursor.execute("SELECT tools FROM user_tools WHERE user_id = ?", (user[0],))
@@ -164,6 +167,8 @@ def register():
         )
         conn.commit()
 
+        StateMethods.setupInitialState(state)
+
         user_id = cursor.lastrowid
         tools_json = json.dumps(Tool().get_tool_names())
         print(f"tools_json: {tools_json}")
@@ -204,3 +209,17 @@ def register():
         "message": "Registration Successful",
         "token": token
     }), 200
+
+@auth_bp.route("/logout", methods=["POST"])
+def logout():
+
+    print("we in logout endpoint!")
+
+    StateMethods.getCleanState(state)
+
+    connection_status["status"] = False
+    connection_status["database_name"] = None
+    connection_status["engine"] = None
+
+    return jsonify({"message": "Logged out successfully and DB disconnected."}), 200
+

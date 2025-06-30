@@ -134,8 +134,7 @@ const DataPreview=()=>{
             </div>
       
             <div style={{ textAlign: 'center' }}>
-              <button className="connect-btn" onClick={() => navigate("/db-choices")}>
-                <img className='btn-icon' src='images/local-db-btn.png' alt="connect db" />
+              <button className="connect-btn" onClick={() => navigate("/local-db")}>
                 Connect to Database
               </button>
             </div>

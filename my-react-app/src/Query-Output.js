@@ -90,6 +90,12 @@ const StateOutput = () => {
           <h2 style={{ fontSize: '1.75rem', marginBottom: '10px', marginTop: '32px' }}>Agent Pipeline Output</h2>
 
           <AgentCard
+            title="Question"
+            description="User Prompt"
+            content={output.question}
+          />
+
+          <AgentCard
             title="writeQuery Agent"
             description="Generates the SQL query based on the user's question."
             content={output.query}

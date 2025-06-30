@@ -11,6 +11,7 @@ const VisualOutput = () => {
   const location = useLocation();
   const [analysisText, setAnalysisText] = useState("");
   const [stateOutputContent, setStateOutputContent] = useState(null);
+  const inputText = location.state?.inputText;
 
 
 
@@ -100,6 +101,23 @@ const VisualOutput = () => {
                         </div>
                     </div>
 
+                {inputText && (
+                <>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>User Prompt</h2>
+                    <div className="analysis-box" style={{ marginTop: '20px' }}>
+                    <pre style={{
+                        background: '#f9f9f9',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        fontSize: '14px'
+                    }}>
+                        {inputText}
+                    </pre>
+                    </div>
+                </>
+                )}
 
                 <h2>Visualization</h2>
                 <iframe

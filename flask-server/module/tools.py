@@ -18,7 +18,7 @@ class Tool:
             self.barChart,
             self.choropleth,
             self.pieChart,
-            self.heatMap,
+            # self.heatMap,
             self.table,
         ]
     
@@ -107,32 +107,32 @@ class Tool:
             print(f"converting to df failed: {e}")
             return e
     
-    @tool
-    def heatMap(
-        data: Annotated[dict, "the dictionary containing the value to be plotted"], 
-        x: Annotated[str, "the name of the x axis"], 
-        y: Annotated[str, "the name of the y axis"],
-        color: Annotated[str, "the key from the dictionary which contains the numeric value. the key capitalization must match exactly from the dictionary."],
-        title: Annotated[str, "the title of the graph"],
-    ):
-        """ Generate a heatmap """
-        try:
-            print("converting to df...")
-            df = pd.DataFrame(data)
+    # @tool
+    # def heatMap(
+    #     data: Annotated[dict, "the dictionary containing the value to be plotted"], 
+    #     x: Annotated[str, "the name of the x axis"], 
+    #     y: Annotated[str, "the name of the y axis"],
+    #     color: Annotated[str, "the key from the dictionary which contains the numeric value. the key capitalization must match exactly from the dictionary."],
+    #     title: Annotated[str, "the title of the graph"],
+    # ):
+    #     """ Generate a heatmap """
+    #     try:
+    #         print("converting to df...")
+    #         df = pd.DataFrame(data)
 
-            heatmap_data = df.pivot(index=y, columns=x, values=color)
+    #         heatmap_data = df.pivot(index=y, columns=x, values=color)
 
-            fig = px.imshow(
-                heatmap_data,
-                color_continuous_scale="plasma",
-                text_auto=True,
-                title=title
-            )
-            return fig
+    #         fig = px.imshow(
+    #             heatmap_data,
+    #             color_continuous_scale="plasma",
+    #             text_auto=True,
+    #             title=title
+    #         )
+    #         return fig
 
-        except Exception as e:
-            print(f"heatmap failed: {e}")
-            return e
+    #     except Exception as e:
+    #         print(f"heatmap failed: {e}")
+    #         return e
         
     @tool
     def table(

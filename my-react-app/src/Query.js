@@ -12,9 +12,6 @@ import ToolSelector from './Query-Tools'
 
 const Query=()=>{
     const [inputText, setInputText]=useState("")
-    // const [visualization, setVisual]=useState(false)
-    // const [analysis, setAnalysis]=useState(false)
-    // const [analysisText, setAnalysisText]=useState("")
     const [showLLMOutput, setShowLLMOutput] = useState(false);
     const [LLMOutputContent, setLLMOutputContent] = useState(null);
     const [showDBOutput, setShowDBOutput] = useState(false);
@@ -92,7 +89,7 @@ const Query=()=>{
 
                 if (data.status === "success"){
                     console.log("backend (/query-input) return success")
-                    navigate("/visual-output")
+                    navigate("/visual-output",  { state: { inputText } })
                 }else throw new Error("Backend responded with failure status")
             } catch (err) {
                 console.error("Error submitting query:", err)

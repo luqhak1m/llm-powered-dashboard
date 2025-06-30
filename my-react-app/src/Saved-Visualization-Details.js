@@ -76,10 +76,29 @@ function SavedVisualDetail() {
 				</div>
 
 				<div className="visual-detail">
-					<h2>{item.prompt}</h2>
-					<p><strong>Timestamp:</strong> {new Date(item.timestamp).toLocaleString()}</p>
+					{item.prompt && (
+					<>
+						<p>{new Date(item.timestamp).toLocaleString()}</p>
+						<h2 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>User Prompt</h2>
+						<div className="analysis-box" style={{ marginTop: '20px' }}>
+						<pre style={{
+							background: '#f9f9f9',
+							padding: '12px',
+							borderRadius: '6px',
+							whiteSpace: 'pre-wrap',
+							wordBreak: 'break-word',
+							fontSize: '14px'
+						}}>
+							{item.prompt}
+						</pre>
+						</div>
+					</>
+					)}
 
-					<h2>Visual</h2>
+					<h2 style={{
+						marginTop: '2em',
+
+					}}>Visual</h2>
 					<div
 						ref={containerRef}
 						style={{
@@ -92,9 +111,22 @@ function SavedVisualDetail() {
 						dangerouslySetInnerHTML={{ __html: item.visualization }}
 					/>
 
-					<h2>Analysis</h2>
-					<div className="analysis-div">
-						<ReactMarkdown>{item.analysis}</ReactMarkdown>
+					<h2 style={{
+						marginTop: '2em',
+
+					}}>Analysis</h2>
+					<div className="analysis-box">
+					<pre style={{
+							background: '#f9f9f9',
+							padding: '12px',
+							borderRadius: '6px',
+							whiteSpace: 'pre-wrap',
+							wordBreak: 'break-word',
+							fontFamily: 'monospace',
+							fontSize: '14px',
+							}}>
+							{item.analysis || "N/A"}
+						</pre>
 					</div>
 				</div>
 			</div>

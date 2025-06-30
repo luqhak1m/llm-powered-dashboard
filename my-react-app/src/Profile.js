@@ -6,29 +6,69 @@ import "./styles/font.css"
 import './styles/profile.css'
 import './styles/back-btn.css'
 
-export const useUser=()=>{
-    const [user, setUser]=useState("")
-    const token=localStorage.getItem("token")
+export const useUser = () => {
+  const [user, setUser] = useState(null)
+  const token = localStorage.getItem("token")
+  const navigate = useNavigate()
 
-    useEffect(()=>{
-        fetch("http://127.0.0.1:5001/auth/currentUser", {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
-        .then(res=>res.json())
-        .then(user=>{
-            setUser(user)
-        })
-    }, [])
+  useEffect(() => {
+    if (!token) {
+      navigate("/login")
+      return
+    }
 
-    return user
+    fetch("http://127.0.0.1:5001/auth/currentUser", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(async (res) => {
+        const data = await res.json()
+        if (!res.ok) {
+          // Handle errors
+          if (data.error === "Token Expired") {
+            alert("Session expired. Please log in again.")
+            await fetch("http://127.0.0.1:5001/auth/logout", {
+                method: "POST",
+                headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+            });
+            localStorage.removeItem("token")
+            navigate("/login")
+          } else if (data.error === "Missing Token" || data.error === "Invalid Token") {
+            await fetch("http://127.0.0.1:5001/auth/logout", {
+                method: "POST",
+                headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+            });
+            localStorage.removeItem("token")
+            navigate("/login")
+          }
+          setUser(null)
+        } else {
+          setUser(data)
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch user:", err)
+        localStorage.removeItem("token")
+        navigate("/login")
+      })
+  }, [token, navigate])
+
+  return user
 }
 
 
 const Profile = () => {
     const user = useUser()
     const navigate = useNavigate()
+
+    if(!user){
+      return <p>... Loading ...</p>
+    }
   
     return (
       <div className="container">

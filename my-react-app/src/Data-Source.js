@@ -38,7 +38,7 @@ const LocalDB = () => {
             const data=await response.json()
             if(response.ok){
                 alert(`${data.message}!`)
-                navigate("/mainmenu")
+                navigate("/db-preview")
             } else {
                 alert(`Login failed: ${data.error}`)
             }
@@ -55,7 +55,7 @@ const LocalDB = () => {
   
           <div className="back-parent">
             <div className='back-div'>
-                <button className="back-btn" onClick={() => navigate("/db-choices")}>
+                <button className="back-btn" onClick={() => navigate("/db-preview")}>
                     ⬅
                 </button>
             </div>

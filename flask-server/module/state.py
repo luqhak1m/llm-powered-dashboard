@@ -16,6 +16,28 @@ from dotenv import load_dotenv
 import ast
 import os
 
+import time
+
+def log_agent_time(agent_name):
+    def decorator(func):
+        def wrapper(state: State):
+            start_time = time.time()
+            with open("agent_time.log", "a") as f:
+                f.write(f"[START] Agent: {agent_name} | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+            state = func(state)
+
+            end_time = time.time()
+            elapsed = end_time - start_time
+            with open("agent_time.log", "a") as f:
+                f.write(f"[END] Agent: {agent_name} | Time taken: {elapsed:.3f} seconds | Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+            return state
+        return wrapper
+    return decorator
+
+
+
 data_source_bp=Blueprint('state', __name__)
 
 class State(TypedDict):
@@ -42,6 +64,7 @@ class State(TypedDict):
 
 class StateMethods:
 
+    @log_agent_time("writeQuery")
     def writeQuery(state: State):
         """Generate SQL query to fetch information."""
 
@@ -80,6 +103,7 @@ class StateMethods:
             print(e)
             return state
     
+    @log_agent_time("validateQuery")
     def validateQuery(state: State):
         """Execute SQL query and verify the query generated."""
 
@@ -129,10 +153,10 @@ class StateMethods:
             print(f"ERROR! {e}")
             state["error"].apend(f"validateQuery validation failed: {str(e)}")
             return state
-                     
+
+    @log_agent_time("improveQuery")
     def improveQuery(state: State):
         print("\nStarting Node improveQuery()\n")
-        state["improvement"]=""
 
         print(f"try number {state['retry']}")
         if state["retry"]<=3:
@@ -150,7 +174,6 @@ class StateMethods:
                 f'Schema: {state["schema"]}'
                 f'SQL Query: {state["query"]}'
                 f'SQL Result: {state["result"]}'
-                f'SQL Improvement: {state["improvement"]}'
 
                 <|eot_id|>
 
@@ -171,7 +194,8 @@ class StateMethods:
             print("max retry reached")
             state["error"].append("improveQuery failed: max retry reached")
             return state
-          
+
+    @log_agent_time("generateDF")       
     def generateDF(state: State):
         """Generate dictionary based on the data provided and user prompt."""
 
@@ -184,7 +208,9 @@ class StateMethods:
             You are a SQL query result parser.
             Given the following user question, SQL query, and result from the SQL query, generate a dictionary containing the name of the column and the corresponding data.
             Your response will be converted directly into a dataframe, hence your response should only be in form of dictionary only.
-            Do not generate a nested dictionary. Each column should be converted into a single key in the dictionary.
+            Do not generate a nested dictionary. Each column should be converted into a single key in the dictionary. Return only a single-level dictionary.
+            Keys are column names.
+            Values are lists of column values.
 
             f'Question: {state["question"]}\n'
             f'SQL Query: {state["query"]}
@@ -221,6 +247,7 @@ class StateMethods:
             state["error"].append(f"generateDF failed: {str(e)}")
             return state
     
+    @log_agent_time("chooseVisualization")
     def chooseVisualization(state: State):
             
         print("\nStarting Node chooseVisualization()\n")
@@ -294,6 +321,7 @@ class StateMethods:
             state["error"].append(f"chooseVisualization failed: {str(e)}")
             return state
 
+    @log_agent_time("generateAnalysis")
     def generateAnalysis(state: State):
         """Answer question using retrieved information as context."""
 
@@ -348,6 +376,7 @@ class StateMethods:
             state["error"].append(f"generateAnalysis failed: {str(e)}")
             return state
 
+    @log_agent_time("dfValidator")
     def dfValidator(state: State):
         '''
         Verify the output of agents routing them to the necessary agent to reproduce the output
@@ -480,29 +509,50 @@ class StateMethods:
             log_message(f"Error defining tools: {e}")
             return 
 
-    def getCleanState():
-        state: State={
-            "db": None,
-            "llm": None,
-            "schema": [],
-            "prompt": None,
-            "question": "",
-            "query": "",
-            "result": "",
-            "retry": 0,
-            "SQLValidity": "",
-            "improvement": "",
-            "data": {},
-            "tools": [],
-            "analysis": "",
-            "visualization": None,
-            "nextNode": "",
-            "routerCount": 0,
-            "error": [],
-        }
+    def getCleanState(state: State=None):
 
-        print(f"\nState created: {type(state)}")
-        return state
+        if not state:
+
+            state: State={
+                "db": None,
+                "llm": None,
+                "schema": [],
+                "prompt": None,
+                "question": "",
+                "query": "",
+                "result": "",
+                "retry": 0,
+                "SQLValidity": "",
+                "improvement": "",
+                "data": {},
+                "tools": [],
+                "analysis": "",
+                "visualization": None,
+                "nextNode": "",
+                "routerCount": 0,
+                "error": [],
+            }
+
+            print(f"\nState created: {type(state)}")
+            return state
+        else:
+            state["db"]=None
+            state["llm"]= None
+            state["schema"]= []
+            state["prompt"]= None
+            state["question"]= ""
+            state["query"]= ""
+            state["result"]= ""
+            state["retry"]= 0
+            state["SQLValidity"]= ""
+            state["improvement"]= ""
+            state["data"]= {}
+            state["tools"]= []
+            state["analysis"]= ""
+            state["visualization"]= None
+            state["nextNode"]= ""
+            state["routerCount"]= 0
+            state["error"]= []
 
     def setupInitialState(state: State):
 
@@ -588,7 +638,7 @@ class StateMethods:
             print(f"error {e}")
             return e
 
-    def clearState(state: State):
+    def clearState(self):
         state["question"]= ""
         state["query"]= ""
         state["result"]= ""

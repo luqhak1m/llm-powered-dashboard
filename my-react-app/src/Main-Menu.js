@@ -11,10 +11,30 @@ const MainMenu = () => {
     const user=useUser()
     const navigate = useNavigate()
 
-    const handleLogout=()=>{
-        localStorage.removeItem("token")
-        alert("You have been logged out from your account.")
-        navigate('/login')
+    const handleLogout = async () => {
+        try {
+            const res = await fetch("http://127.0.0.1:5001/auth/logout", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            });
+
+            const data = await res.json();
+            console.log(data.message); // Optional: Debug log
+
+            localStorage.removeItem("token");
+            alert("You have been logged out.");
+            navigate('/login');
+        } catch (err) {
+            console.error("Logout failed", err);
+            alert("Logout failed. Please try again.");
+        }
+    };
+
+
+    if(!user){
+      return <p>... Loading ...</p>
     }
     
     return (
