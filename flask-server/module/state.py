@@ -55,6 +55,7 @@ class State(TypedDict):
     data: dict = {}
     tools: list = []
     analysis: str = ""
+    raw_visualization: object = None
     visualization: object = None
     nextNode: str=""
     routerCount: int=0
@@ -284,6 +285,8 @@ class StateMethods:
 
             # Step 1: Invoke LLM to get the function call
             response = llm_with_tools.invoke(prompt)
+            print(f"response.content: {response.additional_kwargs.get('tool_calls', [])}")
+            state["raw_visualization"]=response.additional_kwargs.get("tool_calls", [])
 
             # Step 2: Extract tool calls from AIMessage
             tool_calls = response.additional_kwargs.get("tool_calls", [])
@@ -296,7 +299,7 @@ class StateMethods:
             function_name = function_call["function"]["name"]
             function_args = json.loads(function_call["function"]["arguments"])  # Convert string to dict
 
-            # Step 3: Execute tool dynamically using LangChain's `.invoke()`
+            # Step 3: Execute tool dynamically using .invoke()
             tool_mapping = {tool.name: tool for tool in state["tools"]}  # Map tool names
 
             if function_name in tool_mapping:
@@ -527,6 +530,7 @@ class StateMethods:
                 "data": {},
                 "tools": [],
                 "analysis": "",
+                "raw_visualization": None,
                 "visualization": None,
                 "nextNode": "",
                 "routerCount": 0,
@@ -549,6 +553,7 @@ class StateMethods:
             state["data"]= {}
             state["tools"]= []
             state["analysis"]= ""
+            state["raw_visualization"]= None
             state["visualization"]= None
             state["nextNode"]= ""
             state["routerCount"]= 0
@@ -647,6 +652,7 @@ class StateMethods:
         state["improvement"]= ""
         state["data"]= {}
         state["analysis"]= ""
+        state["raw_visualization"]= None
         state["visualization"]= None
         state["nextNode"]= ""
         state["routerCount"]= 0

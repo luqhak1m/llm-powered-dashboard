@@ -35,7 +35,7 @@ export const useUser = () => {
                 }
             });
             localStorage.removeItem("token")
-            navigate("/login")
+            navigate("/")
           } else if (data.error === "Missing Token" || data.error === "Invalid Token") {
             await fetch("http://127.0.0.1:5001/auth/logout", {
                 method: "POST",
@@ -44,7 +44,7 @@ export const useUser = () => {
                 }
             });
             localStorage.removeItem("token")
-            navigate("/login")
+            navigate("/")
           }
           setUser(null)
         } else {
@@ -54,7 +54,7 @@ export const useUser = () => {
       .catch((err) => {
         console.error("Failed to fetch user:", err)
         localStorage.removeItem("token")
-        navigate("/login")
+        navigate("/")
       })
   }, [token, navigate])
 

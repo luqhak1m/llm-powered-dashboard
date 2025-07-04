@@ -25,7 +25,7 @@ const MainMenu = () => {
 
             localStorage.removeItem("token");
             alert("You have been logged out.");
-            navigate('/login');
+            navigate('/');
         } catch (err) {
             console.error("Logout failed", err);
             alert("Logout failed. Please try again.");

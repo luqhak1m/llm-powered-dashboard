@@ -62,7 +62,8 @@ const StateOutput = () => {
 
             <div className='back-parent'>
                 <div className='back-div'>
-                    <button className="back-btn" onClick={() => navigate("/visual-output")}>
+                    <button className="back-btn" onClick={() => navigate("/visual-output", { state: { inputText: output.question } }
+)}>
                         ⬅
                     </button>
                 </div>

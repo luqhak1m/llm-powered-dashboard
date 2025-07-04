@@ -85,7 +85,7 @@ def getStateDetails():
                 "result": final_state["result"],
                 "data": final_state["data"],
                 "analysis": final_state["analysis"],
-                "visualization": str(final_state["visualization"]) if final_state["visualization"] is not None else None,
+                "visualization": str(final_state["raw_visualization"]) if final_state["raw_visualization"] is not None else None,
                 "routerCount": final_state["routerCount"],
                 "retry": final_state["retry"],
                 "SQLValidity": final_state["SQLValidity"]
