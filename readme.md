@@ -1,3 +1,7 @@
+# Video Demo
+
+https://youtu.be/po1CiROYQ2k
+
 # What is this?
 
 Hello and welcome aboard! This project presents an automated data visualization tool using multi agent framework. Submit a prompt and it will visualize your data. It's that simple!
